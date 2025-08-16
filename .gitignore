@@ -1,0 +1,4 @@
+# 忽略所有 node_modules 文件夹
+node_modules/
+# 忽略所有在根目录下的 .vscode文件夹
+.vscode

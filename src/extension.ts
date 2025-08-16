@@ -16,7 +16,9 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
-                localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'src', 'webview')]
+                // --- 修正点 ---
+                // 这个安全设置也必须指向 out 目录，因为打包后只有 out 目录存在
+                localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'out', 'webview')]
             }
         );
 
@@ -41,12 +43,15 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 function getWebviewContent(extensionUri: vscode.Uri, webview: vscode.Webview): string {
-    const htmlPathOnDisk = vscode.Uri.joinPath(extensionUri, 'src', 'webview', 'main.html');
+    // 读取 out 目录下的 html 文件
+    const htmlPathOnDisk = vscode.Uri.joinPath(extensionUri, 'out', 'webview', 'main.html');
+    
     let htmlContent = fs.readFileSync(htmlPathOnDisk.fsPath, 'utf8');
 
+    // 将占位符替换为正确的、可访问的资源路径
     htmlContent = htmlContent.replace(/{{cspSource}}/g, webview.cspSource)
-                             .replace(/{{cssUri}}/g, webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'src', 'webview', 'styles.css')).toString())
-                             .replace(/{{jsUri}}/g, webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'src', 'webview', 'main.js')).toString());
+                             .replace(/{{cssUri}}/g, webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'webview', 'styles.css')).toString())
+                             .replace(/{{jsUri}}/g, webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'webview', 'main.js')).toString());
 
     return htmlContent;
 }
