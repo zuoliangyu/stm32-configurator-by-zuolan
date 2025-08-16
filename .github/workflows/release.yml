@@ -1,7 +1,7 @@
 # 工作流的名称
 name: Create Release and Upload VSIX
 
-# 工作流的触发条件：当一个 v*.*.* 格式的标签 (tag) 被推送到仓库时
+# 工作流的触发条件
 on:
   push:
     tags:
@@ -10,8 +10,12 @@ on:
 # 工作流包含的任务
 jobs:
   build-and-release:
-    # 任务运行的环境：最新的 Ubuntu 系统
+    # 任务运行的环境
     runs-on: ubuntu-latest
+
+    # --- 修正点：为这个任务添加权限 ---
+    permissions:
+      contents: write
 
     # 任务的步骤
     steps:
@@ -23,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # <-- 修正点：将版本从 18 升级到 20
+          node-version: '20'
 
       # 第三步：安装项目依赖和 vsce 工具
       - name: Install dependencies and vsce
