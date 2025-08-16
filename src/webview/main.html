@@ -11,52 +11,74 @@
 </head>
 
 <body>
-
     <div class="container">
         <h1>STM32 Debug Configuration</h1>
         <p>Fill in the details below to generate a `launch.json` configuration for Cortex-Debug.</p>
 
         <div class="form-group">
-            <label for="executablePath">Executable (.elf) Path</label>
-            <input type="text" id="executablePath"
-                value="${command:st-stm32-ide-debug-launch.get-projects-binary-from-context1}"
-                placeholder="e.g., ${workspaceFolder}/build/project.elf">
+            <label>Executable (.elf) Path Source</label>
+            <div class="radio-group">
+                <label><input type="radio" name="elfSource" value="auto" checked> Auto-detect (Requires ST's STM32
+                    Extension)</label>
+                <label><input type="radio" name="elfSource" value="manual"> Manual Path</label>
+            </div>
         </div>
 
+        <div class="form-group hidden" id="manual-elf-path-group">
+            <label for="executablePath">Manual .elf Path</label>
+            <input type="text" id="executablePath" placeholder="e.g., ${workspaceFolder}/build/project.elf">
+        </div>
         <div class="form-group">
             <label for="deviceName">Device Name (e.g., STM32F407ZG)</label>
             <input type="text" id="deviceName" value="STM32F407ZG" placeholder="e.g., STM32F407ZG">
         </div>
 
         <div class="form-group">
-            <label for="interfaceFile">Interface File</label>
-            <select id="interfaceFile">
-                <option value="interface/cmsis-dap.cfg">CMSIS-DAP</option>
-                <option value="interface/stlink.cfg">ST-Link</option>
-                <option value="interface/jlink.cfg">J-Link</option>
+            <label for="servertype">GDB Server</label>
+            <select id="servertype">
+                <option value="openocd" selected>OpenOCD</option>
+                <option value="pyocd">pyOCD</option>
+                <option value="jlink">J-Link</option>
+                <option value="stlink">ST-Link GDB Server</option>
+                <option value="stutil">ST-Util</option>
             </select>
         </div>
 
+        <div id="openocd-options">
+            <div class="form-group" id="openocd-path-group">
+                <label for="openocdPath">OpenOCD Path (Optional)</label>
+                <div class="input-group">
+                    <input type="text" id="openocdPath" placeholder="Auto-detecting...">
+                    <button id="refresh-button" title="Re-scan for OpenOCD in system PATH">Scan</button>
+                </div>
+                <div id="download-link-container" class="hidden">
+                    <small>OpenOCD not found. <a href="https://github.com/openocd-org/openocd/releases">Download it
+                            here</a>.</small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="interfaceFile">Interface File</label>
+                <select id="interfaceFile">
+                    <option value="" disabled selected>Provide valid OpenOCD path to populate...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="adapterSpeed">Adapter Speed (kHz)</label>
+                <input type="number" id="adapterSpeed" value="4000" placeholder="e.g., 4000">
+            </div>
+        </div>
         <div class="form-group">
-            <label for="targetFile">Target File</label>
+            <label for="targetFile">Target File / ID</label>
             <select id="targetFile">
-                <option value="target/stm32f4x.cfg">STM32F4x Series</option>
-                <option value="target/stm32f1x.cfg">STM32F1x Series</option>
-                <option value="target/stm32f3x.cfg">STM32F3x Series</option>
-                <option value="target/stm32f7x.cfg">STM32F7x Series</option>
-                <option value="target/stm32h7x.cfg">STM32H7x Series</option>
-                <option value="target/stm32l4x.cfg">STM32L4x Series</option>
+                <option value="" disabled selected>Provide valid OpenOCD path to populate...</option>
             </select>
         </div>
 
         <div class="form-group">
             <label for="svdFilePath">SVD File Path (Optional)</label>
             <input type="text" id="svdFilePath" placeholder="e.g., ${workspaceFolder}/STM32F407.svd">
-        </div>
-
-        <div class="form-group">
-            <label for="adapterSpeed">Adapter Speed (kHz)</label>
-            <input type="number" id="adapterSpeed" value="4000" placeholder="e.g., 4000">
         </div>
 
         <button id="generate-button">Generate Configuration</button>

@@ -1,4 +1,4 @@
-/* 全局样式设置 */
+/* ... 所有已有样式保持不变 ... */
 body {
     font-family: var(--vscode-font-family);
     font-size: var(--vscode-font-size);
@@ -7,13 +7,11 @@ body {
     padding: 20px;
 }
 
-/* 主容器样式 */
 .container {
     max-width: 600px;
     margin: 0 auto;
 }
 
-/* 标题和段落样式 */
 h1 {
     color: var(--vscode-text-link-foreground);
 }
@@ -23,19 +21,16 @@ p {
     opacity: 0.8;
 }
 
-/* 表单组样式 */
 .form-group {
     margin-bottom: 15px;
 }
 
-/* 标签样式 */
 label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
 }
 
-/* 所有输入框和下拉框的通用样式 */
 input[type="text"],
 input[type="number"],
 select {
@@ -48,14 +43,12 @@ select {
     box-sizing: border-box;
 }
 
-/* 输入框获得焦点时的样式 */
 input:focus,
 select:focus {
     outline: none;
     border-color: var(--vscode-focus-border);
 }
 
-/* 按钮样式 */
 button {
     width: 100%;
     padding: 10px;
@@ -68,15 +61,62 @@ button {
     transition: background-color 0.2s ease;
 }
 
-/* 按钮悬停效果 */
 button:hover {
     background-color: var(--vscode-button-hover-background);
 }
 
-/* 页脚署名样式 */
+.input-group {
+    display: flex;
+    align-items: center;
+}
+
+.input-group input {
+    flex-grow: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+#refresh-button {
+    /* <-- ID 选择器更精确 */
+    padding: 8px 12px;
+    border: 1px solid var(--vscode-input-border);
+    background-color: var(--vscode-button-secondary-background);
+    color: var(--vscode-button-secondary-foreground);
+    border-left: none;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    cursor: pointer;
+}
+
+#refresh-button:hover {
+    background-color: var(--vscode-button-secondary-hover-background);
+}
+
+#download-link-container {
+    margin-top: 5px;
+}
+
+#download-link-container small a {
+    color: var(--vscode-text-link-foreground);
+    text-decoration: none;
+}
+
+#download-link-container small a:hover {
+    text-decoration: underline;
+}
+
+small {
+    opacity: 0.7;
+}
+
 .footer {
     margin-top: 20px;
     text-align: center;
     font-size: 0.9em;
     opacity: 0.6;
+}
+
+/* 用于隐藏元素的辅助类 */
+.hidden {
+    display: none;
 }
