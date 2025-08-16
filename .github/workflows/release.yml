@@ -1,0 +1,50 @@
+# 工作流的名称
+name: Create Release and Upload VSIX
+
+# 工作流的触发条件：当一个 v*.*.* 格式的标签 (tag) 被推送到仓库时
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# 工作流包含的任务
+jobs:
+  build-and-release:
+    # 任务运行的环境：最新的 Ubuntu 系统
+    runs-on: ubuntu-latest
+
+    # 任务的步骤
+    steps:
+      # 第一步：检出你的代码
+      # 使用 actions/checkout 这个官方的 action 来获取你仓库的源代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 第二步：设置 Node.js 环境
+      # 使用 actions/setup-node 来安装指定版本的 Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # 使用 Node.js 18.x 版本
+
+      # 第三步：安装项目依赖和 vsce 工具
+      - name: Install dependencies and vsce
+        run: |
+          npm install
+          npm install -g @vscode/vsce
+
+      # 第四步：打包插件
+      # 运行 vsce package 命令，生成 .vsix 文件
+      - name: Package extension
+        run: vsce package --allow-missing-repository
+
+      # 第五步：创建 GitHub Release 并上传 .vsix 文件
+      # 使用一个非常流行的 action `softprops/action-gh-release` 来完成发布
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # files 字段告诉 action 要上传哪些文件，这里我们使用通配符匹配所有 .vsix 文件
+          files: '*.vsix'
+        env:
+          # GITHUB_TOKEN 是 GitHub Actions 自动提供的密钥，用于授权 action 创建 Release
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
