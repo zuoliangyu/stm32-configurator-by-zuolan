@@ -5,7 +5,10 @@
       "Bash(git push:*)",
       "Bash(git remote set-url:*)",
       "Bash(npm install:*)",
-      "Bash(vsce package:*)"
+      "Bash(vsce package:*)",
+      "Bash(npm run compile:*)",
+      "Bash(git log:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
