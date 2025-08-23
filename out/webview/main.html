@@ -12,29 +12,37 @@
 
 <body>
     <div class="container">
-        <h1>STM32 Debug Configuration</h1>
-        <p>Fill in the details below to generate a `launch.json` configuration for Cortex-Debug.</p>
+        <!-- Language Switch -->
+        <div class="language-switch">
+            <label for="language-select" data-i18n="language">Language</label>
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="zh">中文</option>
+            </select>
+        </div>
+        
+        <h1 data-i18n="title">STM32 Debug Configuration</h1>
+        <p data-i18n="subtitle">Fill in the details below to generate a `launch.json` configuration for Cortex-Debug.</p>
 
         <div class="form-group">
-            <label>Executable (.elf) Path Source</label>
+            <label data-i18n="elfSource">Executable (.elf) Path Source</label>
             <div class="radio-group">
-                <label><input type="radio" name="elfSource" value="auto" checked> Auto-detect (Requires ST's STM32
-                    Extension)</label>
-                <label><input type="radio" name="elfSource" value="manual"> Manual Path</label>
+                <label><input type="radio" name="elfSource" value="auto" checked> <span data-i18n="autoDetectElf">Auto-detect (Requires ST's STM32 Extension)</span></label>
+                <label><input type="radio" name="elfSource" value="manual"> <span data-i18n="manualElf">Manual Path</span></label>
             </div>
         </div>
 
         <div class="form-group hidden" id="manual-elf-path-group">
-            <label for="executablePath">Manual .elf Path</label>
+            <label for="executablePath" data-i18n="manualElfPath">Manual .elf Path</label>
             <input type="text" id="executablePath" placeholder="e.g., ${workspaceFolder}/build/project.elf">
         </div>
         <div class="form-group">
-            <label for="deviceName">Device Name (e.g., STM32F407ZG)</label>
-            <input type="text" id="deviceName" value="STM32F407ZG" placeholder="e.g., STM32F407ZG">
+            <label for="deviceName" data-i18n="deviceName">Device Name (e.g., STM32F407ZG)</label>
+            <input type="text" id="deviceName" value="STM32F407ZG" data-i18n-placeholder="devicePlaceholder">
         </div>
 
         <div class="form-group">
-            <label for="servertype">GDB Server</label>
+            <label for="servertype" data-i18n="gdbServer">GDB Server</label>
             <select id="servertype">
                 <option value="openocd" selected>OpenOCD</option>
                 <option value="pyocd">pyOCD</option>
@@ -46,43 +54,68 @@
 
         <div id="openocd-options">
             <div class="form-group" id="openocd-path-group">
-                <label for="openocdPath">OpenOCD Path (Optional)</label>
+                <label for="openocdPath" data-i18n="openocdPath">OpenOCD Path (Optional)</label>
                 <div class="input-group">
-                    <input type="text" id="openocdPath" placeholder="Auto-detecting...">
-                    <button id="refresh-button" title="Re-scan for OpenOCD in system PATH">Scan</button>
+                    <input type="text" id="openocdPath" data-i18n-placeholder="autoDetecting">
+                    <button id="refresh-button" data-i18n="scanButton" title="Re-scan for OpenOCD in system PATH">Scan</button>
                 </div>
                 <div id="download-link-container" class="hidden">
-                    <small>OpenOCD not found. <a href="https://github.com/openocd-org/openocd/releases">Download it
-                            here</a>.</small>
+                    <small><span data-i18n="noOpenocdFound">OpenOCD not found.</span> <a href="https://github.com/openocd-org/openocd/releases" data-i18n="downloadOpenocd">Download it here</a>.</small>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="interfaceFile">Interface File</label>
+                <label for="interfaceFile" data-i18n="interfaceFile">Interface File</label>
                 <select id="interfaceFile">
-                    <option value="" disabled selected>Provide valid OpenOCD path to populate...</option>
+                    <option value="" disabled selected data-i18n="providePath">Provide valid OpenOCD path to populate...</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="adapterSpeed">Adapter Speed (kHz)</label>
+                <label for="adapterSpeed" data-i18n="adapterSpeed">Adapter Speed (kHz)</label>
                 <input type="number" id="adapterSpeed" value="4000" placeholder="e.g., 4000">
             </div>
         </div>
         <div class="form-group">
-            <label for="targetFile">Target File / ID</label>
+            <label for="targetFile" data-i18n="targetFile">Target File / ID</label>
             <select id="targetFile">
                 <option value="" disabled selected>Provide valid OpenOCD path to populate...</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label for="svdFilePath">SVD File Path (Optional)</label>
-            <input type="text" id="svdFilePath" placeholder="e.g., ${workspaceFolder}/STM32F407.svd">
+            <label for="svdFilePath" data-i18n="svdFile">SVD File Path (Optional)</label>
+            <input type="text" id="svdFilePath" data-i18n-placeholder="svdPlaceholder">
         </div>
 
-        <button id="generate-button">Generate Configuration</button>
-        <p class="footer">Created by 左岚</p>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="liveWatchEnabled"> <span data-i18n="liveWatchEnable">Enable Live Watch</span>
+            </label>
+        </div>
+
+        <div class="form-group hidden" id="livewatch-options">
+            <!-- Dynamic Variable Management -->
+            <div class="form-group">
+                <label data-i18n="currentVariables">Current Variables</label>
+                <div id="variable-list" class="variable-list"></div>
+                <div class="variable-add-section">
+                    <div class="input-group">
+                        <input type="text" id="newVariableInput" data-i18n-placeholder="variableName" placeholder="Variable name">
+                        <button type="button" id="addVariableButton" data-i18n="addVariable">Add Variable</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="liveWatchFrequency" data-i18n="liveWatchFrequency">Update Frequency (samples/second)</label>
+                <input type="number" id="liveWatchFrequency" value="4" min="1" max="100" placeholder="e.g., 4">
+                <small data-i18n="liveWatchFrequencyHelp">Higher values provide more frequent updates but may impact debugging performance</small>
+            </div>
+        </div>
+
+        <button id="generate-button" data-i18n="generateButton">Generate Configuration</button>
+        <p class="footer" data-i18n="createdBy">Created by 左岚</p>
     </div>
 
     <script src="{{jsUri}}"></script>

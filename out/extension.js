@@ -41,15 +41,43 @@ exports.deactivate = deactivate;
  *--------------------------------------------------------------------------------------------*/
 const vscode = __importStar(require("vscode"));
 const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const child_process_1 = require("child_process");
+const providers_1 = require("./providers");
+const openocd_1 = require("./utils/openocd");
+const cortex_debug_1 = require("./utils/cortex-debug");
+const localizationManager_1 = require("./localization/localizationManager");
 let detectedOpenOCDPath = null;
 let currentPanel = undefined;
+let treeDataProvider;
+let localizationManager;
+let currentLiveWatchVariables = [];
 function activate(context) {
-    findOpenOCDPath().then(path => {
-        detectedOpenOCDPath = path;
+    // Initialize localization
+    localizationManager = localizationManager_1.LocalizationManager.getInstance(context);
+    // Initialize tree data provider
+    treeDataProvider = new providers_1.STM32TreeDataProvider(context);
+    vscode.window.createTreeView('stm32-configurator-tree', {
+        treeDataProvider: treeDataProvider,
+        showCollapseAll: true
     });
-    context.subscriptions.push(vscode.commands.registerCommand('stm32-configurator-by-zuolan.start', () => {
+    // Initialize OpenOCD path detection with better error handling
+    (0, openocd_1.findOpenOCDPath)().then(path => {
+        detectedOpenOCDPath = path;
+        if (!path) {
+            console.warn('OpenOCD not found in PATH or common installation directories. Users can set custom path in settings.');
+        }
+    }).catch(error => {
+        console.error('Error during OpenOCD path detection:', error);
+        detectedOpenOCDPath = null;
+    });
+    context.subscriptions.push(vscode.commands.registerCommand('stm32-configurator-by-zuolan.start', async () => {
+        // Check for Cortex Debug extension
+        if (!(0, cortex_debug_1.isCortexDebugInstalled)()) {
+            const shouldProceed = await (0, cortex_debug_1.ensureCortexDebugInstalled)();
+            if (!shouldProceed) {
+                vscode.window.showWarningMessage('STM32 Debug Configurator requires Cortex Debug extension to function properly. Please install it and try again.');
+                return;
+            }
+        }
         if (currentPanel) {
             currentPanel.reveal(vscode.ViewColumn.One);
             return;
@@ -67,74 +95,95 @@ function activate(context) {
                     await generateConfiguration(message.data);
                     return;
                 case 'refreshPath':
-                    const newPath = await findOpenOCDPath();
-                    detectedOpenOCDPath = newPath;
-                    currentPanel?.webview.postMessage({ command: 'updatePath', path: detectedOpenOCDPath });
+                    try {
+                        const newPath = await (0, openocd_1.findOpenOCDPath)();
+                        detectedOpenOCDPath = newPath;
+                        currentPanel?.webview.postMessage({ command: 'updatePath', path: detectedOpenOCDPath });
+                        if (!newPath) {
+                            vscode.window.showWarningMessage(localizationManager.getString('noOpenocdFound') + ' Please install OpenOCD or set custom path in extension settings.', 'Open Settings').then(selection => {
+                                if (selection === 'Open Settings') {
+                                    vscode.commands.executeCommand('workbench.action.openSettings', 'stm32-configurator.openocdPath');
+                                }
+                            });
+                        }
+                        else {
+                            vscode.window.showInformationMessage(`${localizationManager.getString('openocdDetected')} ${newPath}`);
+                        }
+                    }
+                    catch (error) {
+                        vscode.window.showErrorMessage(`Error detecting OpenOCD path: ${error}`);
+                        currentPanel?.webview.postMessage({ command: 'updatePath', path: null });
+                    }
                     return;
-                // --- 新增功能：处理获取 CFG 文件的请求 ---
                 case 'getCFGFiles':
-                    const cfgFiles = await getOpenOCDConfigFiles(message.path);
+                    const cfgFiles = await (0, openocd_1.getOpenOCDConfigFiles)(message.path);
                     currentPanel?.webview.postMessage({ command: 'updateCFGLists', data: cfgFiles });
+                    return;
+                case 'getLanguage':
+                    currentPanel?.webview.postMessage({
+                        command: 'updateLanguage',
+                        language: localizationManager.getCurrentLanguage(),
+                        strings: localizationManager.getAllStrings()
+                    });
+                    return;
+                case 'switchLanguage':
+                    localizationManager.switchLanguage(message.language);
+                    currentPanel?.webview.postMessage({
+                        command: 'updateLanguage',
+                        language: localizationManager.getCurrentLanguage(),
+                        strings: localizationManager.getAllStrings()
+                    });
+                    return;
+                case 'addLiveWatchVariable':
+                    await handleAddLiveWatchVariable(message.variable);
+                    return;
+                case 'removeLiveWatchVariable':
+                    await handleRemoveLiveWatchVariable(message.variable);
                     return;
             }
         }, undefined, context.subscriptions);
     }));
+    // Register tree view commands
+    context.subscriptions.push(vscode.commands.registerCommand('stm32-configurator-by-zuolan.refresh', () => {
+        treeDataProvider.refresh();
+    }), vscode.commands.registerCommand('stm32-configurator-by-zuolan.openConfig', async (config) => {
+        await openDebugConfiguration(config);
+    }), 
+    // Runtime livewatch management commands
+    vscode.commands.registerCommand('stm32-configurator-by-zuolan.addLiveWatchVariable', async () => {
+        const variable = await vscode.window.showInputBox({
+            prompt: localizationManager.getString('variableName'),
+            placeHolder: 'e.g., myVariable, myStruct.field'
+        });
+        if (variable) {
+            await handleAddLiveWatchVariable(variable);
+        }
+    }), vscode.commands.registerCommand('stm32-configurator-by-zuolan.removeLiveWatchVariable', async () => {
+        if (currentLiveWatchVariables.length === 0) {
+            vscode.window.showInformationMessage('No livewatch variables to remove.');
+            return;
+        }
+        const variable = await vscode.window.showQuickPick(currentLiveWatchVariables, {
+            placeHolder: 'Select variable to remove'
+        });
+        if (variable) {
+            await handleRemoveLiveWatchVariable(variable);
+        }
+    }), vscode.commands.registerCommand('stm32-configurator-by-zuolan.toggleLanguage', () => {
+        const currentLang = localizationManager.getCurrentLanguage();
+        const newLang = currentLang === 'en' ? 'zh' : 'en';
+        localizationManager.switchLanguage(newLang);
+        // Update webview if open
+        if (currentPanel) {
+            currentPanel.webview.postMessage({
+                command: 'updateLanguage',
+                language: newLang,
+                strings: localizationManager.getAllStrings()
+            });
+        }
+    }));
 }
 function deactivate() { }
-/**
- * --- 新增功能：根据 OpenOCD 可执行文件路径，读取其配置文件夹 ---
- * @param openocdExePath openocd.exe 的完整路径
- * @returns 包含接口和目标文件列表的对象
- */
-async function getOpenOCDConfigFiles(openocdExePath) {
-    if (!openocdExePath) {
-        return { interfaces: [], targets: [] };
-    }
-    try {
-        const binDir = path.dirname(openocdExePath);
-        // OpenOCD 的 scripts 文件夹通常在 bin 目录的上一级的 share/openocd/scripts 或 scripts 目录中
-        const possibleScriptsPaths = [
-            path.join(binDir, '..', 'share', 'openocd', 'scripts'),
-            path.join(binDir, '..', 'scripts')
-        ];
-        const scriptsPath = possibleScriptsPaths.find(p => fs.existsSync(p));
-        if (!scriptsPath) {
-            return { interfaces: [], targets: [] };
-        }
-        const interfaceDir = path.join(scriptsPath, 'interface');
-        const targetDir = path.join(scriptsPath, 'target');
-        const readDirSafe = async (dir) => {
-            try {
-                const files = await fs.promises.readdir(dir);
-                return files.filter(f => f.endsWith('.cfg'));
-            }
-            catch {
-                return [];
-            }
-        };
-        const interfaces = await readDirSafe(interfaceDir);
-        const targets = await readDirSafe(targetDir);
-        return { interfaces, targets };
-    }
-    catch (e) {
-        console.error("Error reading OpenOCD scripts directory:", e);
-        return { interfaces: [], targets: [] };
-    }
-}
-// (findOpenOCDPath, handleGenerateCommand, generateLaunchConfig, getWebviewContent 函数保持不变)
-function findOpenOCDPath() {
-    return new Promise((resolve) => {
-        const command = process.platform === 'win32' ? 'where openocd.exe' : 'which openocd';
-        (0, child_process_1.exec)(command, (error, stdout) => {
-            if (error) {
-                resolve(null);
-                return;
-            }
-            const firstPath = stdout.split(/\r?\n/)[0].trim();
-            resolve(firstPath || null);
-        });
-    });
-}
 async function generateConfiguration(data) {
     if (!vscode.workspace.workspaceFolders) {
         vscode.window.showErrorMessage('Please open a project folder first!');
@@ -155,6 +204,21 @@ async function generateConfiguration(data) {
         "servertype": data.servertype, "cwd": "${workspaceFolder}", "executable": data.executablePath,
         "device": data.deviceName, "svdFile": data.svdFilePath, "runToEntryPoint": "main"
     };
+    // Add livewatch configuration if enabled
+    if (data.liveWatch && data.liveWatch.enabled) {
+        newConfig.liveWatch = {
+            enabled: true,
+            samplesPerSecond: data.liveWatch.samplesPerSecond
+        };
+        // Add graphConfig for variable watching
+        if (data.liveWatch.variables && data.liveWatch.variables.length > 0) {
+            newConfig.graphConfig = data.liveWatch.variables.map((variable, index) => ({
+                label: variable,
+                expression: variable,
+                encoding: "unsigned"
+            }));
+        }
+    }
     if (data.servertype === 'openocd') {
         newConfig.configFiles = [`interface/${data.interfaceFile}`, `target/${data.targetFile}`]; // <-- 修正：加上目录前缀
         newConfig.openOCDLaunchCommands = [`adapter speed ${data.adapterSpeed}`];
@@ -181,11 +245,108 @@ async function generateConfiguration(data) {
         }
         launchConfig.configurations.unshift(newConfig);
         fs.writeFileSync(launchJsonPath.fsPath, JSON.stringify(launchConfig, null, 4));
-        vscode.window.showInformationMessage('launch.json has been updated successfully!');
+        // Generate success message with livewatch status
+        let successMessage = localizationManager.getString('configGenerated');
+        if (data.liveWatch && data.liveWatch.enabled) {
+            const variableCount = data.liveWatch.variables ? data.liveWatch.variables.length : 0;
+            currentLiveWatchVariables = data.liveWatch.variables || [];
+            successMessage += ' ' + localizationManager.formatString('liveWatchStatus', variableCount.toString(), data.liveWatch.samplesPerSecond.toString());
+        }
+        vscode.window.showInformationMessage(successMessage);
+        // Add to recent configurations and refresh tree
+        treeDataProvider.addRecentConfig(newConfig.name, data.deviceName);
+        treeDataProvider.refresh();
     }
     catch (error) {
         vscode.window.showErrorMessage(`Failed to update launch.json: ${error.message}`);
+        // Notify webview of error
+        currentPanel?.webview.postMessage({ command: 'showError', error: error.message });
     }
+}
+async function openDebugConfiguration(config) {
+    if (!vscode.workspace.workspaceFolders) {
+        vscode.window.showErrorMessage('No workspace folder is open.');
+        return;
+    }
+    const workspaceFolder = vscode.workspace.workspaceFolders[0];
+    const launchJsonPath = vscode.Uri.joinPath(workspaceFolder.uri, '.vscode', 'launch.json');
+    try {
+        // Check if launch.json exists
+        if (fs.existsSync(launchJsonPath.fsPath)) {
+            // Open launch.json file
+            const document = await vscode.workspace.openTextDocument(launchJsonPath);
+            await vscode.window.showTextDocument(document);
+            // Find and highlight the configuration
+            const text = document.getText();
+            const configMatch = text.indexOf(`"name": "${config.name}"`);
+            if (configMatch > -1) {
+                const editor = vscode.window.activeTextEditor;
+                if (editor) {
+                    const position = document.positionAt(configMatch);
+                    editor.selection = new vscode.Selection(position, position);
+                    editor.revealRange(new vscode.Range(position, position));
+                }
+            }
+        }
+        else {
+            vscode.window.showWarningMessage('launch.json not found. Create a debug configuration first.');
+        }
+    }
+    catch (error) {
+        vscode.window.showErrorMessage(`Failed to open configuration: ${error}`);
+    }
+}
+async function handleAddLiveWatchVariable(variable) {
+    if (!variable || variable.trim() === '') {
+        return;
+    }
+    const trimmedVariable = variable.trim();
+    if (currentLiveWatchVariables.includes(trimmedVariable)) {
+        vscode.window.showWarningMessage(`Variable '${trimmedVariable}' is already being watched.`);
+        return;
+    }
+    currentLiveWatchVariables.push(trimmedVariable);
+    // If debugging is active, try to update the running debug configuration
+    const activeSession = vscode.debug.activeDebugSession;
+    if (activeSession && activeSession.type === 'cortex-debug') {
+        try {
+            // Note: This is a simplified approach. Real implementation would need
+            // to interact with cortex-debug extension's API if available
+            vscode.window.showInformationMessage(localizationManager.formatString('variableAdded', trimmedVariable));
+        }
+        catch (error) {
+            console.error('Failed to add variable to active debug session:', error);
+        }
+    }
+    // Notify webview
+    currentPanel?.webview.postMessage({
+        command: 'liveWatchVariableAdded',
+        variable: trimmedVariable
+    });
+}
+async function handleRemoveLiveWatchVariable(variable) {
+    const index = currentLiveWatchVariables.indexOf(variable);
+    if (index === -1) {
+        return;
+    }
+    currentLiveWatchVariables.splice(index, 1);
+    // If debugging is active, try to update the running debug configuration
+    const activeSession = vscode.debug.activeDebugSession;
+    if (activeSession && activeSession.type === 'cortex-debug') {
+        try {
+            // Note: This is a simplified approach. Real implementation would need
+            // to interact with cortex-debug extension's API if available
+            vscode.window.showInformationMessage(localizationManager.formatString('variableRemoved', variable));
+        }
+        catch (error) {
+            console.error('Failed to remove variable from active debug session:', error);
+        }
+    }
+    // Notify webview
+    currentPanel?.webview.postMessage({
+        command: 'liveWatchVariableRemoved',
+        variable: variable
+    });
 }
 function getWebviewContent(extensionUri, webview) {
     const htmlPathOnDisk = vscode.Uri.joinPath(extensionUri, 'out', 'webview', 'main.html');
