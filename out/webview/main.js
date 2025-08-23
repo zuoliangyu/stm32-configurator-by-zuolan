@@ -14,6 +14,7 @@
     const elements = {
         languageSelect: document.getElementById('language-select'),
         generateButton: document.getElementById('generate-button'),
+        browseButton: document.getElementById('browse-button'),
         refreshButton: document.getElementById('refresh-button'),
         openocdPathInput: document.getElementById('openocdPath'),
         downloadLinkContainer: document.getElementById('download-link-container'),
@@ -23,6 +24,10 @@
         elfSourceRadios: document.querySelectorAll('input[name="elfSource"]'),
         interfaceFileSelect: document.getElementById('interfaceFile'),
         targetFileSelect: document.getElementById('targetFile'),
+        interfaceFileSearch: document.getElementById('interfaceFileSearch'),
+        targetFileSearch: document.getElementById('targetFileSearch'),
+        interfaceFileSearchClear: document.getElementById('interfaceFileSearchClear'),
+        targetFileSearchClear: document.getElementById('targetFileSearchClear'),
         liveWatchEnabledCheckbox: document.getElementById('liveWatchEnabled'),
         liveWatchOptionsGroup: document.getElementById('livewatch-options'),
         variableList: document.getElementById('variable-list'),
@@ -139,8 +144,23 @@
         }
     }
 
+    // Store original options for search functionality
+    const originalOptions = {
+        interface: [],
+        target: []
+    };
+
     function populateDropdown(selectElement, options) {
+        // Store original options for search
+        if (selectElement.id === 'interfaceFile') {
+            originalOptions.interface = [...options];
+        } else if (selectElement.id === 'targetFile') {
+            originalOptions.target = [...options];
+        }
+
         selectElement.innerHTML = '';
+        const searchableContainer = selectElement.closest('.searchable-select');
+        
         if (options.length === 0) {
             const defaultOption = document.createElement('option');
             defaultOption.value = "";
@@ -148,14 +168,87 @@
             defaultOption.disabled = true;
             defaultOption.selected = true;
             selectElement.appendChild(defaultOption);
+            
+            // Hide search input when no options
+            if (searchableContainer) {
+                searchableContainer.classList.add('disabled');
+            }
             return;
         }
+        
+        // Show search input when options available
+        if (searchableContainer) {
+            searchableContainer.classList.remove('disabled');
+        }
+        
         options.forEach(optionValue => {
             const option = document.createElement('option');
             option.value = optionValue;
             option.textContent = optionValue;
             selectElement.appendChild(option);
         });
+    }
+
+    // Search functionality
+    function createSearchHandler(searchInput, selectElement, optionsKey) {
+        return function(event) {
+            const searchTerm = event.target.value.toLowerCase();
+            const originalList = originalOptions[optionsKey];
+            
+            if (!originalList || originalList.length === 0) {
+                return;
+            }
+            
+            // Filter options based on search term
+            const filteredOptions = originalList.filter(option => 
+                option.toLowerCase().includes(searchTerm)
+            );
+            
+            // Clear and repopulate select
+            selectElement.innerHTML = '';
+            
+            if (filteredOptions.length === 0) {
+                const noResultOption = document.createElement('option');
+                noResultOption.value = "";
+                noResultOption.textContent = searchTerm ? `No results for "${event.target.value}"` : strings.noCfgFiles || "No .cfg files found";
+                noResultOption.disabled = true;
+                noResultOption.selected = true;
+                selectElement.appendChild(noResultOption);
+            } else {
+                filteredOptions.forEach(optionValue => {
+                    const option = document.createElement('option');
+                    option.value = optionValue;
+                    
+                    // Highlight matching text (using textContent to avoid XSS)
+                    if (searchTerm) {
+                        // For display purposes, we'll use a simpler approach
+                        option.textContent = optionValue;
+                        option.setAttribute('data-search-term', searchTerm);
+                    } else {
+                        option.textContent = optionValue;
+                    }
+                    
+                    selectElement.appendChild(option);
+                });
+                
+                // Auto-select first result if only one match
+                if (filteredOptions.length === 1) {
+                    selectElement.selectedIndex = 0;
+                }
+            }
+        };
+    }
+
+    // Clear search functionality
+    function createClearHandler(searchInput, selectElement, optionsKey) {
+        return function() {
+            searchInput.value = '';
+            const originalList = originalOptions[optionsKey];
+            
+            if (originalList && originalList.length > 0) {
+                populateDropdown(selectElement, originalList);
+            }
+        };
     }
 
     // UI visibility controls
@@ -253,6 +346,73 @@
             vscode.postMessage({ command: 'generate', data: data });
         });
 
+        // Browse for OpenOCD path
+        elements.browseButton.addEventListener('click', () => {
+            vscode.postMessage({ command: 'browseOpenOCDPath' });
+        });
+
+        // Search functionality for interface files
+        elements.interfaceFileSearch.addEventListener('input', 
+            createSearchHandler(elements.interfaceFileSearch, elements.interfaceFileSelect, 'interface')
+        );
+        
+        elements.interfaceFileSearchClear.addEventListener('click', 
+            createClearHandler(elements.interfaceFileSearch, elements.interfaceFileSelect, 'interface')
+        );
+
+        // Keyboard navigation for interface files
+        elements.interfaceFileSearch.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                elements.interfaceFileSelect.focus();
+                if (elements.interfaceFileSelect.options.length > 0) {
+                    elements.interfaceFileSelect.selectedIndex = 0;
+                }
+            } else if (event.key === 'Enter') {
+                if (elements.interfaceFileSelect.options.length === 1 && !elements.interfaceFileSelect.options[0].disabled) {
+                    elements.interfaceFileSelect.selectedIndex = 0;
+                    elements.interfaceFileSelect.focus();
+                }
+            } else if (event.key === 'Escape') {
+                elements.interfaceFileSearch.value = '';
+                const originalList = originalOptions['interface'];
+                if (originalList && originalList.length > 0) {
+                    populateDropdown(elements.interfaceFileSelect, originalList);
+                }
+            }
+        });
+
+        // Search functionality for target files
+        elements.targetFileSearch.addEventListener('input', 
+            createSearchHandler(elements.targetFileSearch, elements.targetFileSelect, 'target')
+        );
+        
+        elements.targetFileSearchClear.addEventListener('click', 
+            createClearHandler(elements.targetFileSearch, elements.targetFileSelect, 'target')
+        );
+
+        // Keyboard navigation for target files
+        elements.targetFileSearch.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                elements.targetFileSelect.focus();
+                if (elements.targetFileSelect.options.length > 0) {
+                    elements.targetFileSelect.selectedIndex = 0;
+                }
+            } else if (event.key === 'Enter') {
+                if (elements.targetFileSelect.options.length === 1 && !elements.targetFileSelect.options[0].disabled) {
+                    elements.targetFileSelect.selectedIndex = 0;
+                    elements.targetFileSelect.focus();
+                }
+            } else if (event.key === 'Escape') {
+                elements.targetFileSearch.value = '';
+                const originalList = originalOptions['target'];
+                if (originalList && originalList.length > 0) {
+                    populateDropdown(elements.targetFileSelect, originalList);
+                }
+            }
+        });
+
         // Refresh OpenOCD path
         elements.refreshButton.addEventListener('click', () => {
             elements.openocdPathInput.value = "";
@@ -301,6 +461,14 @@
             case 'liveWatchVariableRemoved':
                 showMessage(strings.variableRemoved?.replace('{0}', message.variable) || 
                     `Variable '${message.variable}' removed successfully`, 'success');
+                break;
+
+            case 'updateOpenOCDPath':
+                if (message.path) {
+                    elements.openocdPathInput.value = message.path;
+                    elements.downloadLinkContainer.classList.add('hidden');
+                    requestCFGFiles();
+                }
                 break;
 
             case 'showError':

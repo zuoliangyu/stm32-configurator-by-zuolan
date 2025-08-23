@@ -19,13 +19,35 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RecentConfigManager = exports.STM32TreeDataProvider = exports.STM32TreeItem = void 0;
-// Re-export all types
+/**
+ * 数据提供器模块导出
+ * 统一导出所有数据提供器相关的类型和类，便于外部模块导入使用
+ *
+ * @fileoverview 数据提供器模块导出文件
+ * @author 左岚
+ * @since 0.1.0
+ */
+/**
+ * 重新导出所有数据类型
+ * 包括DebugConfiguration和RecentConfig接口
+ */
 __exportStar(require("./types"), exports);
-// Re-export main classes
+/**
+ * 重新导出STM32树形项目类
+ * 用于创建树形视图中的各种项目
+ */
 var stm32TreeItem_1 = require("./stm32TreeItem");
 Object.defineProperty(exports, "STM32TreeItem", { enumerable: true, get: function () { return stm32TreeItem_1.STM32TreeItem; } });
+/**
+ * 重新导出STM32树形数据提供器类
+ * VS Code扩展的主要数据提供器实现
+ */
 var treeDataProvider_1 = require("./treeDataProvider");
 Object.defineProperty(exports, "STM32TreeDataProvider", { enumerable: true, get: function () { return treeDataProvider_1.STM32TreeDataProvider; } });
+/**
+ * 重新导出最近配置管理器类
+ * 管理用户最近使用的调试配置
+ */
 var recentConfigManager_1 = require("./recentConfigManager");
 Object.defineProperty(exports, "RecentConfigManager", { enumerable: true, get: function () { return recentConfigManager_1.RecentConfigManager; } });
 //# sourceMappingURL=index.js.map

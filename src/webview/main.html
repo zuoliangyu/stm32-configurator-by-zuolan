@@ -57,6 +57,7 @@
                 <label for="openocdPath" data-i18n="openocdPath">OpenOCD Path (Optional)</label>
                 <div class="input-group">
                     <input type="text" id="openocdPath" data-i18n-placeholder="autoDetecting">
+                    <button id="browse-button" data-i18n="browseButton" title="Browse for OpenOCD executable">Browse</button>
                     <button id="refresh-button" data-i18n="scanButton" title="Re-scan for OpenOCD in system PATH">Scan</button>
                 </div>
                 <div id="download-link-container" class="hidden">
@@ -66,9 +67,15 @@
 
             <div class="form-group">
                 <label for="interfaceFile" data-i18n="interfaceFile">Interface File</label>
-                <select id="interfaceFile">
-                    <option value="" disabled selected data-i18n="providePath">Provide valid OpenOCD path to populate...</option>
-                </select>
+                <div class="searchable-select">
+                    <div class="search-input-wrapper">
+                        <input type="text" id="interfaceFileSearch" class="search-input" data-i18n-placeholder="searchInterface" placeholder="Search interface files...">
+                        <button type="button" class="search-clear-btn" id="interfaceFileSearchClear" title="Clear search">×</button>
+                    </div>
+                    <select id="interfaceFile" class="searchable-dropdown">
+                        <option value="" disabled selected data-i18n="providePath">Provide valid OpenOCD path to populate...</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">
@@ -78,9 +85,15 @@
         </div>
         <div class="form-group">
             <label for="targetFile" data-i18n="targetFile">Target File / ID</label>
-            <select id="targetFile">
-                <option value="" disabled selected>Provide valid OpenOCD path to populate...</option>
-            </select>
+            <div class="searchable-select">
+                <div class="search-input-wrapper">
+                    <input type="text" id="targetFileSearch" class="search-input" data-i18n-placeholder="searchTarget" placeholder="Search target files...">
+                    <button type="button" class="search-clear-btn" id="targetFileSearchClear" title="Clear search">×</button>
+                </div>
+                <select id="targetFile" class="searchable-dropdown">
+                    <option value="" disabled selected>Provide valid OpenOCD path to populate...</option>
+                </select>
+            </div>
         </div>
 
         <div class="form-group">

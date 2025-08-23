@@ -3,8 +3,22 @@
  * Licensed under the MIT License. See LICENSE file in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+/**
+ * 英文本地化字符串模块
+ * 定义STM32调试配置器扩展的所有英文界面文本
+ * 包括表单标签、按钮文本、提示信息等
+ * 
+ * @fileoverview 英文本地化字符串
+ * @author 左岚
+ * @since 0.1.0
+ */
+
 import { LocalizedStrings } from './index';
 
+/**
+ * 英文本地化字符串对象
+ * 包含扩展所有用户界面文本的英文版本
+ */
 export const en: LocalizedStrings = {
     // Main UI
     title: "STM32 Debug Configuration",
@@ -20,6 +34,9 @@ export const en: LocalizedStrings = {
     gdbServer: "GDB Server",
     openocdPath: "OpenOCD Path (Optional)",
     openocdPathOptional: "OpenOCD Path (Optional)",
+    browseButton: "Browse",
+    searchInterface: "Search interface files...",
+    searchTarget: "Search target files...",
     scanButton: "Scan",
     interfaceFile: "Interface File",
     targetFile: "Target File / ID",

@@ -1,4 +1,8 @@
 "use strict";
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) 2025 左岚. All rights reserved.
+ * Licensed under the MIT License. See LICENSE file in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -34,30 +38,68 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.STM32TreeDataProvider = void 0;
-/*---------------------------------------------------------------------------------------------
- * Copyright (c) 2025 左岚. All rights reserved.
- * Licensed under the MIT License. See LICENSE file in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+/**
+ * STM32树形数据提供器模块
+ * 实现VS Code的TreeDataProvider接口，为STM32配置器提供树形视图数据
+ *
+ * @fileoverview STM32树形视图数据提供器
+ * @author 左岚
+ * @since 0.1.0
+ */
 const vscode = __importStar(require("vscode"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const stm32TreeItem_1 = require("./stm32TreeItem");
 const recentConfigManager_1 = require("./recentConfigManager");
+/**
+ * STM32树形数据提供器类
+ * 实现VS Code的TreeDataProvider接口，管理STM32配置器的树形视图数据
+ *
+ * @class STM32TreeDataProvider
+ * @implements vscode.TreeDataProvider<STM32TreeItem>
+ * @since 0.1.0
+ */
 class STM32TreeDataProvider {
     context;
+    /** 树形数据变化事件发射器 */
     _onDidChangeTreeData = new vscode.EventEmitter();
+    /** 树形数据变化事件，对外暴露的只读事件 */
     onDidChangeTreeData = this._onDidChangeTreeData.event;
+    /** 最近配置管理器实例 */
     recentConfigManager;
+    /**
+     * 构造STM32树形数据提供器
+     *
+     * @param context - VS Code扩展上下文
+     */
     constructor(context) {
         this.context = context;
         this.recentConfigManager = new recentConfigManager_1.RecentConfigManager(context);
     }
+    /**
+     * 刷新树形视图
+     * 触发树形数据变化事件，通知VS Code重新渲染树形视图
+     */
     refresh() {
         this._onDidChangeTreeData.fire();
     }
+    /**
+     * 获取树形项目
+     * TreeDataProvider接口的必需方法，返回指定元素的树形项目表示
+     *
+     * @param element - STM32树形项目
+     * @returns VS Code树形项目
+     */
     getTreeItem(element) {
         return element;
     }
+    /**
+     * 获取子项目
+     * TreeDataProvider接口的必需方法，返回指定元素的子项目
+     *
+     * @param element - 父级STM32树形项目，如果为undefined则返回根项目
+     * @returns 子项目数组的Promise
+     */
     async getChildren(element) {
         if (!element) {
             return this.getRootItems();
@@ -73,6 +115,13 @@ class STM32TreeDataProvider {
                 return [];
         }
     }
+    /**
+     * 获取根级项目
+     * 返回树形视图的顶级分类项目
+     *
+     * @private
+     * @returns 根级STM32树形项目数组
+     */
     getRootItems() {
         const items = [];
         // Debug Configurations category
@@ -85,6 +134,13 @@ class STM32TreeDataProvider {
         items.push(new stm32TreeItem_1.STM32TreeItem('Quick Actions', vscode.TreeItemCollapsibleState.Collapsed, 'quickCategory'));
         return items;
     }
+    /**
+     * 获取调试配置项目
+     * 从当前工作区的launch.json中加载所有cortex-debug类型的配置
+     *
+     * @private
+     * @returns 调试配置树形项目数组的Promise
+     */
     async getDebugConfigurations() {
         const configurations = await this.loadDebugConfigurations();
         if (configurations.length === 0) {
@@ -100,12 +156,26 @@ class STM32TreeDataProvider {
             return item;
         });
     }
+    /**
+     * 获取最近配置项目
+     * 返回用户最近使用的调试配置列表
+     *
+     * @private
+     * @returns 最近配置树形项目数组
+     */
     getRecentConfigurations() {
         return this.recentConfigManager.getRecentConfigs().map(config => {
             const item = new stm32TreeItem_1.STM32TreeItem(config.name, vscode.TreeItemCollapsibleState.None, 'recentConfig', config);
             return item;
         });
     }
+    /**
+     * 获取快捷操作项目
+     * 返回常用的快捷操作项目列表
+     *
+     * @private
+     * @returns 快捷操作树形项目数组
+     */
     getQuickActions() {
         const actions = [];
         actions.push(new stm32TreeItem_1.STM32TreeItem('Generate New Configuration', vscode.TreeItemCollapsibleState.None, 'quickAction'));
@@ -116,6 +186,14 @@ class STM32TreeDataProvider {
         };
         return actions;
     }
+    /**
+     * 加载调试配置
+     * 从当前工作区的.vscode/launch.json文件中加载所有调试配置
+     *
+     * @private
+     * @returns 调试配置数组的Promise，只包含'cortex-debug'类型的配置
+     * @throws {Error} 当JSON解析失败时记录错误并返回空数组
+     */
     async loadDebugConfigurations() {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
@@ -139,6 +217,17 @@ class STM32TreeDataProvider {
             return [];
         }
     }
+    /**
+     * 添加最近配置
+     * 将新的调试配置添加到最近列表中并刷新视图
+     *
+     * @param name - 配置名称
+     * @param deviceName - STM32设备名称
+     * @example
+     * ```typescript
+     * treeDataProvider.addRecentConfig('My Debug Config', 'STM32F407VG');
+     * ```
+     */
     addRecentConfig(name, deviceName) {
         this.recentConfigManager.addRecentConfig(name, deviceName);
         this.refresh();

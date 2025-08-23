@@ -2,6 +2,17 @@
  * Copyright (c) 2025 左岚. All rights reserved.
  * Licensed under the MIT License. See LICENSE file in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+
+/**
+ * OpenOCD工具类模块
+ * 提供OpenOCD路径检测和配置文件读取功能
+ * 支持Windows、macOS和Linux平台的OpenOCD安装检测
+ * 
+ * @fileoverview OpenOCD工具类
+ * @author 左岚
+ * @since 0.1.0
+ */
+
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -9,7 +20,8 @@ import { exec } from 'child_process';
 import * as vscode from 'vscode';
 
 /**
- * Common OpenOCD installation paths on Windows
+ * Windows平台上常见的OpenOCD安装路径
+ * 包括STM32CubeIDE、独立安装、xPack等各种安装方式
  */
 const COMMON_OPENOCD_PATHS = [
     // STM32CubeIDE installations
@@ -27,7 +39,17 @@ const COMMON_OPENOCD_PATHS = [
 ];
 
 /**
- * Expands environment variables and glob patterns in a path
+ * 展开路径中的环境变量和通配符
+ * 解析路径中的%VAR%格式环境变量和*通配符
+ * 
+ * @param pathStr - 包含环境变量或通配符的路径字符串
+ * @returns 展开后的路径数组，如果包含通配符则可能返回多个路径
+ * @example
+ * ```typescript
+ * expandPath('%USERPROFILE%\\OpenOCD\\bin\\openocd.exe');
+ * expandPath('C:\\ST\\STM32CubeIDE_*\\tools\\bin\\openocd.exe');
+ * ```
+ * @private
  */
 function expandPath(pathStr: string): string[] {
     // Expand environment variables
@@ -68,7 +90,12 @@ function expandPath(pathStr: string): string[] {
 }
 
 /**
- * Check if OpenOCD executable exists at the given path
+ * 检查指定路径是否存在OpenOCD可执行文件
+ * 验证路径是否存在并且是一个文件
+ * 
+ * @param execPath - 要检查的OpenOCD可执行文件路径
+ * @returns 如果路径存在且为文件则返回true，否则返回false
+ * @private
  */
 function checkOpenOCDPath(execPath: string): boolean {
     try {
@@ -79,7 +106,23 @@ function checkOpenOCDPath(execPath: string): boolean {
 }
 
 /**
- * Find OpenOCD path using multiple detection methods
+ * 使用多种检测方法查找OpenOCD路径
+ * 按以下顺序检测：
+ * 1. 用户配置的路径
+ * 2. PATH环境变量中的openocd
+ * 3. 常见安装路径（仅Windows）
+ * 
+ * @returns OpenOCD可执行文件的完整路径，如果未找到则返回null
+ * @example
+ * ```typescript
+ * const openocdPath = await findOpenOCDPath();
+ * if (openocdPath) {
+ *   console.log('Found OpenOCD at:', openocdPath);
+ * } else {
+ *   console.log('OpenOCD not found');
+ * }
+ * ```
+ * @since 0.1.0
  */
 export function findOpenOCDPath(): Promise<string | null> {
     return new Promise(async (resolve) => {
@@ -123,9 +166,21 @@ export function findOpenOCDPath(): Promise<string | null> {
 }
 
 /**
- * 根据 OpenOCD 可执行文件路径，读取其配置文件夹
- * @param openocdExePath openocd.exe 的完整路径
- * @returns 包含接口和目标文件列表的对象
+ * 获取OpenOCD配置文件
+ * 根据OpenOCD可执行文件路径，读取其scripts目录下的接口和目标配置文件
+ * 
+ * @param openocdExePath - OpenOCD可执行文件的完整路径
+ * @returns 包含接口和目标配置文件名列表的对象
+ * @returns interfaces - 可用的接口配置文件名数组
+ * @returns targets - 可用的目标配置文件名数组
+ * @throws {Error} 当读取配置文件失败时记录错误并返回空数组
+ * @example
+ * ```typescript
+ * const configs = await getOpenOCDConfigFiles('/path/to/openocd.exe');
+ * console.log('Interfaces:', configs.interfaces);
+ * console.log('Targets:', configs.targets);
+ * ```
+ * @since 0.1.0
  */
 export async function getOpenOCDConfigFiles(openocdExePath: string): Promise<{ interfaces: string[], targets: string[] }> {
     if (!openocdExePath) {
@@ -149,6 +204,13 @@ export async function getOpenOCDConfigFiles(openocdExePath: string): Promise<{ i
         const interfaceDir = path.join(scriptsPath, 'interface');
         const targetDir = path.join(scriptsPath, 'target');
 
+        /**
+         * 安全读取目录中的.cfg文件
+         * 在读取目录失败时返回空数组而不抛出异常
+         * 
+         * @param dir - 要读取的目录路径
+         * @returns 目录中所有.cfg文件名的数组
+         */
         const readDirSafe = async (dir: string): Promise<string[]> => {
             try {
                 const files = await fs.promises.readdir(dir);

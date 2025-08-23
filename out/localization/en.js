@@ -5,6 +5,10 @@
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.en = void 0;
+/**
+ * 英文本地化字符串对象
+ * 包含扩展所有用户界面文本的英文版本
+ */
 exports.en = {
     // Main UI
     title: "STM32 Debug Configuration",
@@ -19,6 +23,9 @@ exports.en = {
     gdbServer: "GDB Server",
     openocdPath: "OpenOCD Path (Optional)",
     openocdPathOptional: "OpenOCD Path (Optional)",
+    browseButton: "Browse",
+    searchInterface: "Search interface files...",
+    searchTarget: "Search target files...",
     scanButton: "Scan",
     interfaceFile: "Interface File",
     targetFile: "Target File / ID",

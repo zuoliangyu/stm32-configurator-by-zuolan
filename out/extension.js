@@ -1,4 +1,8 @@
 "use strict";
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) 2025 左岚. All rights reserved.
+ * Licensed under the MIT License. See LICENSE file in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -35,21 +39,43 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 exports.deactivate = deactivate;
-/*---------------------------------------------------------------------------------------------
- * Copyright (c) 2025 左岚. All rights reserved.
- * Licensed under the MIT License. See LICENSE file in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+/**
+ * STM32调试配置器扩展的主入口模块
+ * 提供STM32微控制器调试配置的图形化界面和自动化生成功能
+ *
+ * @fileoverview STM32 Debug Configurator - VS Code扩展主模块
+ * @author 左岚
+ * @since 0.1.0
+ */
 const vscode = __importStar(require("vscode"));
 const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 const providers_1 = require("./providers");
 const openocd_1 = require("./utils/openocd");
 const cortex_debug_1 = require("./utils/cortex-debug");
 const localizationManager_1 = require("./localization/localizationManager");
+/** 检测到的OpenOCD路径 */
 let detectedOpenOCDPath = null;
+/** 当前活动的Webview面板 */
 let currentPanel = undefined;
+/** STM32树形数据提供器实例 */
 let treeDataProvider;
+/** 本地化管理器实例 */
 let localizationManager;
+/** 当前实时监视变量列表 */
 let currentLiveWatchVariables = [];
+/**
+ * 激活扩展
+ * 初始化扩展的所有功能，包括本地化、树形视图、命令注册等
+ *
+ * @param context - VS Code扩展上下文，提供扩展生命周期管理
+ * @example
+ * ```typescript
+ * // VS Code会自动调用此函数
+ * activate(context);
+ * ```
+ * @since 0.1.0
+ */
 function activate(context) {
     // Initialize localization
     localizationManager = localizationManager_1.LocalizationManager.getInstance(context);
@@ -134,6 +160,18 @@ function activate(context) {
                         strings: localizationManager.getAllStrings()
                     });
                     return;
+                case 'browseOpenOCDPath':
+                    try {
+                        const openOCDPath = await browseForOpenOCDPath();
+                        if (openOCDPath) {
+                            detectedOpenOCDPath = openOCDPath;
+                            currentPanel?.webview.postMessage({ command: 'updateOpenOCDPath', path: openOCDPath });
+                        }
+                    }
+                    catch (error) {
+                        vscode.window.showErrorMessage(`Failed to browse for OpenOCD path: ${error.message}`);
+                    }
+                    return;
                 case 'addLiveWatchVariable':
                     await handleAddLiveWatchVariable(message.variable);
                     return;
@@ -183,7 +221,30 @@ function activate(context) {
         }
     }));
 }
+/**
+ * 停用扩展
+ * 清理扩展占用的资源，执行必要的清理工作
+ *
+ * @since 0.1.0
+ */
 function deactivate() { }
+/**
+ * 生成调试配置
+ * 根据用户输入的数据生成launch.json中的调试配置
+ *
+ * @param data - 包含调试配置参数的对象
+ * @param data.deviceName - STM32设备名称
+ * @param data.executablePath - 可执行文件路径
+ * @param data.servertype - 调试服务器类型 ('openocd' 或 'pyocd')
+ * @param data.openocdPath - OpenOCD路径（servertype为'openocd'时使用）
+ * @param data.interfaceFile - 接口配置文件名
+ * @param data.targetFile - 目标配置文件名
+ * @param data.adapterSpeed - 适配器速度
+ * @param data.svdFilePath - SVD文件路径
+ * @param data.liveWatch - 实时监视配置
+ * @throws {Error} 当工作区未打开或配置写入失败时抛出异常
+ * @since 0.1.0
+ */
 async function generateConfiguration(data) {
     if (!vscode.workspace.workspaceFolders) {
         vscode.window.showErrorMessage('Please open a project folder first!');
@@ -263,6 +324,16 @@ async function generateConfiguration(data) {
         currentPanel?.webview.postMessage({ command: 'showError', error: error.message });
     }
 }
+/**
+ * 打开调试配置
+ * 在编辑器中打开launch.json并定位到指定的调试配置
+ *
+ * @param config - 要打开的调试配置对象
+ * @param config.name - 配置名称，用于在文件中定位
+ * @returns Promise<void> 异步操作完成的Promise
+ * @throws {Error} 当工作区未打开或文件操作失败时抛出异常
+ * @since 0.2.0
+ */
 async function openDebugConfiguration(config) {
     if (!vscode.workspace.workspaceFolders) {
         vscode.window.showErrorMessage('No workspace folder is open.');
@@ -296,6 +367,19 @@ async function openDebugConfiguration(config) {
         vscode.window.showErrorMessage(`Failed to open configuration: ${error}`);
     }
 }
+/**
+ * 处理添加实时监视变量
+ * 将变量添加到当前的实时监视列表中
+ *
+ * @param variable - 要添加的变量名或表达式
+ * @returns Promise<void> 异步操作完成的Promise
+ * @example
+ * ```typescript
+ * await handleAddLiveWatchVariable('myVariable');
+ * await handleAddLiveWatchVariable('myStruct.field');
+ * ```
+ * @since 0.2.0
+ */
 async function handleAddLiveWatchVariable(variable) {
     if (!variable || variable.trim() === '') {
         return;
@@ -324,6 +408,14 @@ async function handleAddLiveWatchVariable(variable) {
         variable: trimmedVariable
     });
 }
+/**
+ * 处理移除实时监视变量
+ * 从当前的实时监视列表中移除指定变量
+ *
+ * @param variable - 要移除的变量名
+ * @returns Promise<void> 异步操作完成的Promise
+ * @since 0.2.0
+ */
 async function handleRemoveLiveWatchVariable(variable) {
     const index = currentLiveWatchVariables.indexOf(variable);
     if (index === -1) {
@@ -348,6 +440,52 @@ async function handleRemoveLiveWatchVariable(variable) {
         variable: variable
     });
 }
+/**
+ * 浏览选择OpenOCD路径
+ * 打开文件选择对话框让用户手动选择OpenOCD可执行文件
+ *
+ * @returns Promise<string | undefined> 选择的OpenOCD路径，如果用户取消则返回undefined
+ * @throws {Error} 当文件选择对话框操作失败时抛出异常
+ * @since 0.2.0
+ */
+async function browseForOpenOCDPath() {
+    const result = await vscode.window.showOpenDialog({
+        canSelectMany: false,
+        canSelectFolders: false,
+        canSelectFiles: true,
+        filters: {
+            'Executable': process.platform === 'win32' ? ['exe'] : ['*'],
+            'All Files': ['*']
+        },
+        openLabel: 'Select OpenOCD Executable'
+    });
+    if (result && result.length > 0) {
+        const selectedPath = result[0].fsPath;
+        // Basic validation: check if the selected file looks like openocd
+        const fileName = path.basename(selectedPath).toLowerCase();
+        if (fileName.includes('openocd') || fileName === 'openocd.exe' || fileName === 'openocd') {
+            return selectedPath;
+        }
+        else {
+            // Ask user for confirmation if filename doesn't contain 'openocd'
+            const confirm = await vscode.window.showWarningMessage(`The selected file "${fileName}" doesn't appear to be OpenOCD. Use it anyway?`, 'Yes', 'No');
+            if (confirm === 'Yes') {
+                return selectedPath;
+            }
+        }
+    }
+    return undefined;
+}
+/**
+ * 获取Webview内容
+ * 读取HTML模板文件并替换其中的占位符，生成完整的Webview内容
+ *
+ * @param extensionUri - 扩展的URI路径
+ * @param webview - Webview实例，用于生成CSP源和资源URI
+ * @returns 处理后的HTML内容字符串
+ * @throws {Error} 当HTML文件读取失败时抛出异常
+ * @since 0.1.0
+ */
 function getWebviewContent(extensionUri, webview) {
     const htmlPathOnDisk = vscode.Uri.joinPath(extensionUri, 'out', 'webview', 'main.html');
     let htmlContent = fs.readFileSync(htmlPathOnDisk.fsPath, 'utf8');

@@ -1,9 +1,91 @@
-# Change Log
+# 更新日志
 
-All notable changes to the "stm32-configurator-by-zuolan" extension will be documented in this file.
+STM32 Debug Configurator 扩展的所有重要变更都将记录在此文件中。
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+本文档格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
+此项目遵循 [语义化版本控制](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [0.2.1] - 2025-08-23
 
-- Initial release
+### 新增 (Added)
+- 🌍 完整的中文版 README 文档 (README_zh.md)
+- 📖 增强的英文版 README 文档，包含更详细的使用说明
+- 📝 完整的 JSDoc 风格中文注释覆盖所有 TypeScript 源代码
+- 🔍 改进的文档结构和用户指南
+
+### 改进 (Changed)
+- 📚 重构了文档结构，提高了可读性和专业性
+- 🎯 优化了安装和使用指南，更加详细和用户友好
+- 📊 增强了故障排除部分，包含更多常见问题解决方案
+- 🌐 改进了多语言支持文档
+
+### 技术改进 (Technical)
+- 💻 为所有 TypeScript 文件添加了标准化的 JSDoc 注释
+- 📁 改进了代码可维护性和开发者体验
+- 🔧 增强了代码文档的完整性
+
+## [0.2.0] - 2025-08-23
+
+### 新增 (Added)
+- 🎯 活动栏集成 - 在 VS Code 活动栏中添加专用图标
+- 📊 LiveWatch 实时变量监控功能
+- 🌐 完整的多语言支持（中文/英文）
+- 📁 树视图侧边栏，用于管理调试配置
+- 🔧 改进的 OpenOCD 路径自动检测
+
+### 改进 (Changed)
+- 🎨 全新的现代化用户界面设计
+- 🔄 更好的配置持久化和管理
+- 📈 增强的用户体验和交互设计
+
+### 修复 (Fixed)
+- 🐛 修复了配置文件读取的稳定性问题
+- 🔧 改进了跨平台兼容性
+
+## [0.1.0] - 2025-08-23
+
+### 新增 (Added)
+- ✨ 重大功能更新和架构改进
+- 🎨 全新的现代界面设计
+- 📁 树视图侧边栏集成
+- 🔄 配置持久化和历史记录功能
+
+### 改进 (Changed)
+- 🚀 大幅提升了用户体验
+- 📊 改进了配置管理流程
+- 🔧 优化了扩展性能
+
+## [0.0.9] - 2025-08-23
+
+### 新增 (Added)
+- 🚀 首次公开发布
+- 📝 基础的调试配置生成功能
+- 🔧 OpenOCD 集成支持
+- 🎯 STM32 调试配置的可视化界面
+
+### 功能特性 (Features)
+- ⚙️ 自动生成 launch.json 配置
+- 🔍 OpenOCD 路径自动检测
+- 📱 简洁的用户界面
+- 🛠️ 支持多种 GDB 服务器
+
+---
+
+## 版本说明
+
+### 语义化版本控制说明
+- **主版本号 (MAJOR)**：当做了不兼容的 API 修改
+- **次版本号 (MINOR)**：当做了向下兼容的功能性新增
+- **修订号 (PATCH)**：当做了向下兼容的问题修正
+
+### 变更类型说明
+- `新增 (Added)` - 新功能
+- `改进 (Changed)` - 现有功能的变更
+- `已弃用 (Deprecated)` - 即将移除的功能
+- `已移除 (Removed)` - 已移除的功能
+- `修复 (Fixed)` - 错误修复
+- `安全性 (Security)` - 安全漏洞修复
+
+---
+
+**📝 注意**: 此文档将持续更新，记录扩展的所有重要变更。每个版本的详细变更信息请参阅对应的发布说明。

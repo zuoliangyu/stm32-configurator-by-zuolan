@@ -5,6 +5,10 @@
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.zh = void 0;
+/**
+ * 中文本地化字符串对象
+ * 包含扩展所有用户界面文本的中文版本
+ */
 exports.zh = {
     // Main UI
     title: "STM32 调试配置",
@@ -15,10 +19,13 @@ exports.zh = {
     autoDetectElf: "自动检测 (需要ST的STM32扩展)",
     manualElf: "手动路径",
     manualElfPath: "手动 .elf 路径",
-    deviceName: "设备名称 (例如: STM32F407ZG)",
+    deviceName: "设备名称 (任意，这主要用于自己看的)",
     gdbServer: "GDB 服务器",
     openocdPath: "OpenOCD 路径 (可选)",
     openocdPathOptional: "OpenOCD 路径 (可选)",
+    browseButton: "浏览",
+    searchInterface: "搜索接口文件...",
+    searchTarget: "搜索目标文件...",
     scanButton: "扫描",
     interfaceFile: "接口文件",
     targetFile: "目标文件 / ID",
