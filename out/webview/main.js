@@ -32,7 +32,15 @@
         liveWatchOptionsGroup: document.getElementById('livewatch-options'),
         variableList: document.getElementById('variable-list'),
         newVariableInput: document.getElementById('newVariableInput'),
-        addVariableButton: document.getElementById('addVariableButton')
+        addVariableButton: document.getElementById('addVariableButton'),
+        // ARM toolchain elements
+        armToolchainPathInput: document.getElementById('armToolchainPath'),
+        browseArmButton: document.getElementById('browse-arm-button'),
+        refreshArmButton: document.getElementById('refresh-arm-button'),
+        armDownloadLinkContainer: document.getElementById('arm-download-link-container'),
+        armToolchainInfo: document.getElementById('arm-toolchain-info'),
+        armVersion: document.getElementById('arm-version'),
+        armTarget: document.getElementById('arm-target')
     };
 
     // Localization functions
@@ -340,7 +348,8 @@
                 targetFile: elements.targetFileSelect.value,
                 svdFilePath: document.getElementById('svdFilePath').value,
                 adapterSpeed: document.getElementById('adapterSpeed').value,
-                liveWatch: liveWatchData
+                liveWatch: liveWatchData,
+                armToolchainPath: elements.armToolchainPathInput.value
             };
             
             vscode.postMessage({ command: 'generate', data: data });
@@ -349,6 +358,11 @@
         // Browse for OpenOCD path
         elements.browseButton.addEventListener('click', () => {
             vscode.postMessage({ command: 'browseOpenOCDPath' });
+        });
+
+        // Browse for ARM toolchain path
+        elements.browseArmButton.addEventListener('click', () => {
+            vscode.postMessage({ command: 'browseArmToolchainPath' });
         });
 
         // Search functionality for interface files
@@ -420,6 +434,15 @@
             elements.downloadLinkContainer.classList.add('hidden');
             vscode.postMessage({ command: 'refreshPath' });
         });
+
+        // Refresh ARM toolchain path
+        elements.refreshArmButton.addEventListener('click', () => {
+            elements.armToolchainPathInput.value = "";
+            elements.armToolchainPathInput.placeholder = strings.autoDetecting || "Auto-detecting...";
+            elements.armDownloadLinkContainer.classList.add('hidden');
+            elements.armToolchainInfo.classList.add('hidden');
+            vscode.postMessage({ command: 'refreshArmToolchainPath' });
+        });
     }
 
     // Message handling from extension
@@ -473,6 +496,30 @@
 
             case 'showError':
                 showMessage(message.error, 'error');
+                break;
+
+            case 'updateArmToolchainPath':
+                const armPath = message.path;
+                const armInfo = message.info;
+                if (armPath) {
+                    elements.armToolchainPathInput.value = armPath;
+                    elements.armToolchainPathInput.placeholder = "Leave empty to use system PATH...";
+                    elements.armDownloadLinkContainer.classList.add('hidden');
+                    
+                    if (armInfo) {
+                        elements.armVersion.textContent = armInfo.version || 'Unknown';
+                        elements.armTarget.textContent = armInfo.target || 'arm-none-eabi';
+                        elements.armToolchainInfo.classList.remove('hidden');
+                    } else {
+                        elements.armToolchainInfo.classList.add('hidden');
+                    }
+                } else {
+                    elements.armToolchainPathInput.value = "";
+                    elements.armToolchainPathInput.placeholder = strings.autoDetectionFailed || 
+                        "Auto-detection failed. Please specify the path manually.";
+                    elements.armDownloadLinkContainer.classList.remove('hidden');
+                    elements.armToolchainInfo.classList.add('hidden');
+                }
                 break;
         }
     });

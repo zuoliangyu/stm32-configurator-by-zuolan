@@ -100,7 +100,9 @@ button:hover {
 }
 
 #browse-button,
-#refresh-button {
+#refresh-button,
+#browse-arm-button,
+#refresh-arm-button {
     padding: 8px 12px;
     border: 1px solid var(--vscode-input-border);
     background-color: var(--vscode-button-secondary-background);
@@ -111,21 +113,58 @@ button:hover {
 }
 
 #browse-button:hover,
-#refresh-button:hover {
+#refresh-button:hover,
+#browse-arm-button:hover,
+#refresh-arm-button:hover {
     background-color: var(--vscode-button-secondary-hover-background);
 }
 
-#download-link-container {
+#download-link-container,
+#arm-download-link-container {
     margin-top: 5px;
 }
 
-#download-link-container small a {
+#download-link-container small a,
+#arm-download-link-container small a {
     color: var(--vscode-text-link-foreground);
     text-decoration: none;
 }
 
-#download-link-container small a:hover {
+#download-link-container small a:hover,
+#arm-download-link-container small a:hover {
     text-decoration: underline;
+}
+
+/* ARM Toolchain Info Display */
+.toolchain-info {
+    margin-top: 8px;
+    padding: 12px;
+    background-color: var(--vscode-textBlockQuote-background);
+    border: 1px solid var(--vscode-textBlockQuote-border);
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.info-row {
+    display: flex;
+    margin-bottom: 6px;
+}
+
+.info-row:last-child {
+    margin-bottom: 0;
+}
+
+.info-label {
+    font-weight: 600;
+    min-width: 80px;
+    color: var(--vscode-foreground);
+    opacity: 0.8;
+}
+
+.info-value {
+    flex: 1;
+    color: var(--vscode-textLink-foreground);
+    font-family: var(--vscode-editor-font-family);
 }
 
 small {

@@ -83,6 +83,30 @@
                 <input type="number" id="adapterSpeed" value="4000" placeholder="e.g., 4000">
             </div>
         </div>
+
+        <!-- ARM Toolchain Configuration Section -->
+        <div class="form-group" id="arm-toolchain-section">
+            <label for="armToolchainPath" data-i18n="armToolchainPath">ARM Toolchain Path (Optional)</label>
+            <div class="input-group">
+                <input type="text" id="armToolchainPath" data-i18n-placeholder="autoDetecting">
+                <button id="browse-arm-button" data-i18n="browseButton" title="Browse for ARM toolchain executable">Browse</button>
+                <button id="refresh-arm-button" data-i18n="scanButton" title="Re-scan for ARM toolchain in system PATH">Scan</button>
+            </div>
+            <div id="arm-download-link-container" class="hidden">
+                <small><span data-i18n="noArmToolchainFound">ARM Toolchain not found.</span> <a href="https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads" data-i18n="downloadArmToolchain">Download it here</a>.</small>
+            </div>
+            <div id="arm-toolchain-info" class="toolchain-info hidden">
+                <div class="info-row">
+                    <span class="info-label" data-i18n="version">Version:</span>
+                    <span id="arm-version" class="info-value">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" data-i18n="target">Target:</span>
+                    <span id="arm-target" class="info-value">-</span>
+                </div>
+            </div>
+        </div>
+
         <div class="form-group">
             <label for="targetFile" data-i18n="targetFile">Target File / ID</label>
             <div class="searchable-select">

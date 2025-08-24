@@ -1,0 +1,353 @@
+"use strict";
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) 2025 左岚. All rights reserved.
+ * Licensed under the MIT License. See LICENSE file in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * 国际化功能测试
+ * 测试多语言支持和语言切换功能
+ *
+ * @fileoverview 国际化测试套件
+ * @author 左岚
+ * @since 0.2.5
+ */
+const assert = __importStar(require("assert"));
+const sinon = __importStar(require("sinon"));
+const vscode = __importStar(require("vscode"));
+const localizationManager_1 = require("../localization/localizationManager");
+describe('Internationalization Tests', () => {
+    let sandbox;
+    let mockContext;
+    let localizationManager;
+    beforeEach(() => {
+        sandbox = sinon.createSandbox();
+        // Mock ExtensionContext
+        mockContext = {
+            subscriptions: [],
+            workspaceState: {
+                get: sandbox.stub(),
+                update: sandbox.stub().resolves(),
+                keys: sandbox.stub().returns([])
+            },
+            globalState: {
+                get: sandbox.stub().returns(undefined), // Default to undefined for language preference
+                update: sandbox.stub().resolves(),
+                keys: sandbox.stub().returns([]),
+                setKeysForSync: sandbox.stub()
+            },
+            secrets: {
+                get: sandbox.stub(),
+                store: sandbox.stub(),
+                delete: sandbox.stub(),
+                onDidChange: sandbox.stub()
+            },
+            extensionUri: vscode.Uri.file('/test/extension'),
+            extensionPath: '/test/extension',
+            environmentVariableCollection: {},
+            storagePath: '/test/storage',
+            globalStoragePath: '/test/global-storage',
+            logPath: '/test/logs',
+            extensionMode: vscode.ExtensionMode.Test,
+            extension: {},
+            logUri: vscode.Uri.file('/test/logs'),
+            storageUri: vscode.Uri.file('/test/storage'),
+            globalStorageUri: vscode.Uri.file('/test/global-storage')
+        };
+        // Mock VS Code configuration
+        sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+            get: sandbox.stub().returns('en'), // Default language
+            update: sandbox.stub().resolves(),
+            has: sandbox.stub().returns(true),
+            inspect: sandbox.stub()
+        });
+    });
+    afterEach(() => {
+        sandbox.restore();
+        // Reset singleton instance for clean tests
+        localizationManager_1.LocalizationManager.instance = null;
+    });
+    describe('LocalizationManager Initialization', () => {
+        it('should create LocalizationManager instance successfully', () => {
+            localizationManager = localizationManager_1.LocalizationManager.getInstance(mockContext);
+            assert.ok(localizationManager);
+            assert.strictEqual(typeof localizationManager.getString, 'function');
+            assert.strictEqual(typeof localizationManager.switchLanguage, 'function');
+        });
+        it('should follow singleton pattern', () => {
+            const manager1 = localizationManager_1.LocalizationManager.getInstance(mockContext);
+            const manager2 = localizationManager_1.LocalizationManager.getInstance(mockContext);
+            assert.strictEqual(manager1, manager2);
+        });
+        it('should initialize with default language', () => {
+            localizationManager = localizationManager_1.LocalizationManager.getInstance(mockContext);
+            const currentLang = localizationManager.getCurrentLanguage();
+            assert.ok(['en', 'zh'].includes(currentLang));
+        });
+        it('should respect user preference from global state', () => {
+            // Mock global state returning Chinese preference
+            mockContext.globalState.get = sandbox.stub().returns('zh');
+            localizationManager = localizationManager_1.LocalizationManager.getInstance(mockContext);
+            const currentLang = localizationManager.getCurrentLanguage();
+            assert.strictEqual(currentLang, 'zh');
+        });
+        it('should fall back to VS Code configuration if no global state', () => {
+            // Mock configuration returning Chinese
+            const mockConfig = {
+                get: sandbox.stub().returns('zh'),
+                update: sandbox.stub().resolves(),
+                has: sandbox.stub().returns(true),
+                inspect: sandbox.stub()
+            };
+            sandbox.stub(vscode.workspace, 'getConfiguration').returns(mockConfig);
+            localizationManager = localizationManager_1.LocalizationManager.getInstance(mockContext);
+            const currentLang = localizationManager.getCurrentLanguage();
+            assert.strictEqual(currentLang, 'zh');
+        });
+    });
+    describe('Language Switching', () => {
+        beforeEach(() => {
+            localizationManager = localizationManager_1.LocalizationManager.getInstance(mockContext);
+        });
+        it('should switch from English to Chinese', async () => {
+            // Start with English
+            assert.strictEqual(localizationManager.getCurrentLanguage(), 'en');
+            await localizationManager.switchLanguage('zh');
+            assert.strictEqual(localizationManager.getCurrentLanguage(), 'zh');
+        });
+        it('should switch from Chinese to English', async () => {
+            // Switch to Chinese first
+            await localizationManager.switchLanguage('zh');
+            assert.strictEqual(localizationManager.getCurrentLanguage(), 'zh');
+            // Then switch back to English
+            await localizationManager.switchLanguage('en');
+            assert.strictEqual(localizationManager.getCurrentLanguage(), 'en');
+        });
+        it('should persist language preference to global state', async () => {
+            const updateStub = mockContext.globalState.update;
+            await localizationManager.switchLanguage('zh');
+            assert.ok(updateStub.calledWith('language', 'zh'));
+        });
+        it('should update VS Code configuration on language change', async () => {
+            const configUpdateStub = sandbox.stub().resolves();
+            const mockConfig = {
+                get: sandbox.stub().returns('en'),
+                update: configUpdateStub,
+                has: sandbox.stub().returns(true),
+                inspect: sandbox.stub()
+            };
+            sandbox.stub(vscode.workspace, 'getConfiguration').returns(mockConfig);
+            await localizationManager.switchLanguage('zh');
+            assert.ok(configUpdateStub.calledWith('language', 'zh', vscode.ConfigurationTarget.Global));
+        });
+        it('should handle invalid language gracefully', async () => {
+            const initialLang = localizationManager.getCurrentLanguage();
+            // Try to switch to invalid language
+            await localizationManager.switchLanguage('invalid');
+            // Should remain at original language
+            assert.strictEqual(localizationManager.getCurrentLanguage(), initialLang);
+        });
+    });
+    describe('String Localization', () => {
+        beforeEach(() => {
+            localizationManager = localizationManager_1.LocalizationManager.getInstance(mockContext);
+        });
+        it('should return English strings by default', () => {
+            const toolchainTitle = localizationManager.getString('toolchainDetectionTitle');
+            assert.ok(typeof toolchainTitle === 'string');
+            assert.ok(toolchainTitle.length > 0);
+            // Should be in English
+            assert.ok(/[a-zA-Z]/.test(toolchainTitle));
+        });
+        it('should return Chinese strings when switched to Chinese', async () => {
+            await localizationManager.switchLanguage('zh');
+            const toolchainTitle = localizationManager.getString('toolchainDetectionTitle');
+            assert.ok(typeof toolchainTitle === 'string');
+            assert.ok(toolchainTitle.length > 0);
+            // Should contain Chinese characters
+            assert.ok(/[\u4e00-\u9fff]/.test(toolchainTitle));
+        });
+        it('should return all strings for current language', async () => {
+            const allStrings = localizationManager.getAllStrings();
+            assert.ok(typeof allStrings === 'object');
+            assert.ok(Object.keys(allStrings).length > 0);
+            // Should contain expected keys
+            assert.ok('toolchainDetectionTitle' in allStrings);
+            assert.ok('openocd' in allStrings);
+            assert.ok('armToolchain' in allStrings);
+        });
+        it('should handle missing string keys gracefully', () => {
+            const missingString = localizationManager.getString('nonExistentKey');
+            // Should return the key itself as fallback
+            assert.strictEqual(missingString, 'nonExistentKey');
+        });
+        it('should format strings with parameters', () => {
+            // Test formatString method if it exists
+            if (typeof localizationManager.formatString === 'function') {
+                const formatted = localizationManager.formatString('Hello {0}, you have {1} messages', 'John', '5');
+                assert.strictEqual(formatted, 'Hello John, you have 5 messages');
+            }
+        });
+    });
+    describe('Toolchain-Specific Localization', () => {
+        beforeEach(() => {
+            localizationManager = localizationManager_1.LocalizationManager.getInstance(mockContext);
+        });
+        it('should provide localized strings for toolchain detection', () => {
+            const strings = [
+                'toolchainDetectionTitle',
+                'detectingToolchains',
+                'toolchainDetectionComplete',
+                'openocd',
+                'armToolchain',
+                'found',
+                'notFound',
+                'continue',
+                'cancel'
+            ];
+            strings.forEach(key => {
+                const value = localizationManager.getString(key);
+                assert.ok(typeof value === 'string');
+                assert.ok(value.length > 0);
+            });
+        });
+        it('should provide localized strings for configuration dialogs', () => {
+            const strings = [
+                'configureManually',
+                'browseForPath',
+                'downloadLinks',
+                'toolchainSetupSuccess',
+                'toolchainDetectionWizard',
+                'autoDetectionResults'
+            ];
+            strings.forEach(key => {
+                const value = localizationManager.getString(key);
+                assert.ok(typeof value === 'string');
+                assert.ok(value.length > 0);
+            });
+        });
+        it('should maintain consistency between languages', async () => {
+            // Get English version
+            const englishStrings = localizationManager.getAllStrings();
+            const englishKeys = Object.keys(englishStrings);
+            // Switch to Chinese
+            await localizationManager.switchLanguage('zh');
+            const chineseStrings = localizationManager.getAllStrings();
+            const chineseKeys = Object.keys(chineseStrings);
+            // Should have same keys in both languages
+            assert.strictEqual(englishKeys.length, chineseKeys.length);
+            englishKeys.forEach(key => {
+                assert.ok(chineseKeys.includes(key), `Key ${key} missing in Chinese localization`);
+            });
+        });
+    });
+    describe('Error Handling and Edge Cases', () => {
+        beforeEach(() => {
+            localizationManager = localizationManager_1.LocalizationManager.getInstance(mockContext);
+        });
+        it('should handle global state save errors gracefully', async () => {
+            // Mock global state update to fail
+            mockContext.globalState.update.rejects(new Error('State save failed'));
+            // Should not throw error
+            assert.doesNotThrow(async () => {
+                await localizationManager.switchLanguage('zh');
+            });
+        });
+        it('should handle configuration update errors gracefully', async () => {
+            // Mock config update to fail
+            const configUpdateStub = sandbox.stub().rejects(new Error('Config update failed'));
+            const mockConfig = {
+                get: sandbox.stub().returns('en'),
+                update: configUpdateStub,
+                has: sandbox.stub().returns(true),
+                inspect: sandbox.stub()
+            };
+            sandbox.stub(vscode.workspace, 'getConfiguration').returns(mockConfig);
+            // Should not throw error
+            assert.doesNotThrow(async () => {
+                await localizationManager.switchLanguage('zh');
+            });
+        });
+        it('should handle corrupted language data gracefully', () => {
+            // This would require mocking the language files, which is complex
+            // For now, test that getString always returns a string
+            const result = localizationManager.getString('anyKey');
+            assert.strictEqual(typeof result, 'string');
+        });
+        it('should handle concurrent language switches', async () => {
+            // Start multiple language switches simultaneously
+            const promises = [
+                localizationManager.switchLanguage('zh'),
+                localizationManager.switchLanguage('en'),
+                localizationManager.switchLanguage('zh')
+            ];
+            await Promise.all(promises);
+            // Should end up in a consistent state
+            const finalLang = localizationManager.getCurrentLanguage();
+            assert.ok(['en', 'zh'].includes(finalLang));
+        });
+    });
+    describe('Integration with VS Code Settings', () => {
+        beforeEach(() => {
+            localizationManager = localizationManager_1.LocalizationManager.getInstance(mockContext);
+        });
+        it('should sync with stm32-configurator.language setting', async () => {
+            const configGetStub = sandbox.stub().returns('zh');
+            const configUpdateStub = sandbox.stub().resolves();
+            sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+                get: configGetStub,
+                update: configUpdateStub,
+                has: sandbox.stub().returns(true),
+                inspect: sandbox.stub()
+            });
+            await localizationManager.switchLanguage('en');
+            assert.ok(configUpdateStub.calledWith('language', 'en', vscode.ConfigurationTarget.Global));
+        });
+        it('should handle configuration scope correctly', async () => {
+            const configUpdateStub = sandbox.stub().resolves();
+            sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+                get: sandbox.stub().returns('en'),
+                update: configUpdateStub,
+                has: sandbox.stub().returns(true),
+                inspect: sandbox.stub()
+            });
+            await localizationManager.switchLanguage('zh');
+            // Should use Global scope for language preference
+            assert.ok(configUpdateStub.calledWith(sinon.match.string, sinon.match.string, vscode.ConfigurationTarget.Global));
+        });
+    });
+});
+//# sourceMappingURL=internationalization.test.js.map

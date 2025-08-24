@@ -2,7 +2,7 @@
   "name": "stm32-configurator-by-zuolan",
   "displayName": "STM32 Debug Configurator (by zuolan)",
   "description": "A visual configurator for STM32 Cortex-Debug.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -18,6 +18,10 @@
   },
   "activationEvents": [
     "onCommand:stm32-configurator-by-zuolan.start",
+    "onCommand:stm32-configurator-by-zuolan.autoConfigureAll",
+    "onCommand:stm32-configurator-by-zuolan.oneClickSetup",
+    "onCommand:stm32-configurator-by-zuolan.intelligentWizard",
+    "onCommand:stm32-configurator-by-zuolan.healthCheck",
     "onView:stm32-configurator-explorer"
   ],
   "extensionDependencies": [
@@ -83,6 +87,48 @@
         "title": "Toggle Language (中文/English)",
         "category": "STM32",
         "icon": "$(globe)"
+      },
+      {
+        "command": "stm32-configurator-by-zuolan.detectToolchain",
+        "title": "Detect ARM Toolchain",
+        "category": "STM32",
+        "icon": "$(search)"
+      },
+      {
+        "command": "stm32-configurator-by-zuolan.setupToolchain",
+        "title": "Setup Toolchain",
+        "category": "STM32",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "stm32-configurator-by-zuolan.autoConfigureAll",
+        "title": "Auto-Configure All",
+        "category": "STM32 Auto-Config",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "stm32-configurator-by-zuolan.oneClickSetup",
+        "title": "One-Click Setup",
+        "category": "STM32 Auto-Config",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "stm32-configurator-by-zuolan.intelligentWizard",
+        "title": "Intelligent Configuration Wizard",
+        "category": "STM32 Auto-Config",
+        "icon": "$(lightbulb-autofix)"
+      },
+      {
+        "command": "stm32-configurator-by-zuolan.autoTroubleshoot",
+        "title": "Auto-Troubleshoot Configuration",
+        "category": "STM32 Auto-Config",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "stm32-configurator-by-zuolan.healthCheck",
+        "title": "Environment Health Check",
+        "category": "STM32 Auto-Config",
+        "icon": "$(pulse)"
       }
     ],
     "menus": {
@@ -96,6 +142,26 @@
           "command": "stm32-configurator-by-zuolan.refresh",
           "when": "view == stm32-configurator-tree",
           "group": "navigation@2"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.setupToolchain",
+          "when": "view == stm32-configurator-tree",
+          "group": "navigation@3"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.oneClickSetup",
+          "when": "view == stm32-configurator-tree",
+          "group": "auto-config@1"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.autoConfigureAll",
+          "when": "view == stm32-configurator-tree",
+          "group": "auto-config@2"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.healthCheck",
+          "when": "view == stm32-configurator-tree",
+          "group": "auto-config@3"
         }
       ],
       "view/item/context": [
@@ -116,6 +182,27 @@
         },
         {
           "command": "stm32-configurator-by-zuolan.toggleLanguage"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.detectToolchain"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.setupToolchain"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.autoConfigureAll"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.oneClickSetup"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.intelligentWizard"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.autoTroubleshoot"
+        },
+        {
+          "command": "stm32-configurator-by-zuolan.healthCheck"
         }
       ]
     },
@@ -151,26 +238,32 @@
     "test:unit": "npm run compile && mocha ./out/test/openocd-browser.test.js",
     "test:integration": "npm run compile && mocha ./out/test/webview-integration.test.js",
     "test:platform": "npm run compile && mocha ./out/test/cross-platform.test.js",
-    "test:all": "npm run test:unit && npm run test:integration && npm run test:platform",
+    "test:toolchain": "npm run compile && mocha \"./out/test/{toolchain-workflow,extension-activation,ui-components,internationalization,configuration-management}.test.js\" --timeout 10000",
+    "test:workflow": "npm run compile && mocha ./out/test/toolchain-workflow.test.js --timeout 10000",
+    "test:ui": "npm run compile && mocha ./out/test/ui-components.test.js --timeout 5000",
+    "test:i18n": "npm run compile && mocha ./out/test/internationalization.test.js --timeout 5000",
+    "test:config": "npm run compile && mocha ./out/test/configuration-management.test.js --timeout 5000",
+    "test:extension": "npm run compile && mocha ./out/test/extension-activation.test.js --timeout 5000",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:platform && npm run test:toolchain",
     "test:watch": "npm run compile && mocha ./out/test/**/*.test.js --watch",
     "test:coverage": "nyc npm run test:all"
   },
   "devDependencies": {
-    "@types/vscode": "^1.80.0",
+    "@types/jsdom": "^21.1.6",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.0",
+    "@types/sinon": "^17.0.4",
+    "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^5.59.1",
     "@typescript-eslint/parser": "^5.59.1",
-    "eslint": "^8.39.0",
-    "glob": "^8.1.0",
-    "mocha": "^10.2.0",
-    "typescript": "^5.0.4",
     "@vscode/test-electron": "^2.3.2",
     "copyfiles": "^2.4.1",
-    "sinon": "^17.0.1",
+    "eslint": "^8.39.0",
+    "glob": "^8.1.0",
     "jsdom": "^24.0.0",
+    "mocha": "^10.2.0",
     "nyc": "^15.1.0",
-    "@types/sinon": "^17.0.2",
-    "@types/jsdom": "^21.1.6"
+    "sinon": "^17.0.1",
+    "typescript": "^5.0.4"
   }
 }

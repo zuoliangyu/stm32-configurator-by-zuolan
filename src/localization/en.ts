@@ -34,6 +34,7 @@ export const en: LocalizedStrings = {
     gdbServer: "GDB Server",
     openocdPath: "OpenOCD Path (Optional)",
     openocdPathOptional: "OpenOCD Path (Optional)",
+    armToolchainPath: "ARM Toolchain Path (Optional)",
     browseButton: "Browse",
     searchInterface: "Search interface files...",
     searchTarget: "Search target files...",
@@ -62,8 +63,10 @@ export const en: LocalizedStrings = {
     
     // Messages
     noOpenocdFound: "OpenOCD not found.",
+    noArmToolchainFound: "ARM Toolchain not found.",
     downloadOpenocd: "Download it here",
     openocdDetected: "OpenOCD found at:",
+    armToolchainDetected: "ARM Toolchain found at:",
     configGenerated: "launch.json has been updated successfully!",
     liveWatchStatus: "Live Watch enabled with {0} variables at {1}Hz.",
     variableAdded: "Variable '{0}' added successfully",
@@ -81,5 +84,44 @@ export const en: LocalizedStrings = {
     createdBy: "Created by 左岚",
     
     // Additional messages
-    noVariables: "No variables added yet"
+    noVariables: "No variables added yet",
+    
+    // Toolchain Detection
+    toolchainDetectionTitle: "Toolchain Detection",
+    detectingToolchains: "Detecting toolchains...",
+    toolchainDetectionComplete: "Toolchain detection complete",
+    openocdDetectionStatus: "OpenOCD Detection Status",
+    armToolchainDetectionStatus: "ARM Toolchain Detection Status", 
+    detectionSuccess: "Success",
+    detectionFailed: "Failed",
+    notFound: "Not found",
+    foundAt: "Found at",
+    version: "Version",
+    target: "Target",
+    downloadOpenOCD: "Download OpenOCD",
+    downloadArmToolchain: "Download ARM Toolchain",
+    configureManually: "Manual configuration",
+    continue: "Continue",
+    cancel: "Cancel",
+    confirmPath: "Confirm path",
+    enterPathManually: "Enter path manually",
+    selectPath: "Select path",
+    invalidPath: "Invalid path",
+    configurationSaved: "Configuration saved",
+    toolchainConfiguration: "Toolchain Configuration",
+    autoDetectionResults: "Automatically detect and configure toolchains",
+    recommendedDownloadLinks: "Recommended Download Links",
+    toolchainDetectionWizard: "Toolchain Detection Wizard",
+    
+    // New toolchain setup buttons
+    setupToolchain: "Setup Toolchain",
+    detectArmToolchain: "Detect ARM Toolchain",
+    toolchainSetupTitle: "Toolchain Setup",
+    automaticDetection: "Automatic Detection",
+    manualConfiguration: "Manual Configuration",
+    setupToolchainDescription: "Configure ARM development toolchain for STM32 debugging",
+    detectToolchainDescription: "Automatically detect and configure ARM toolchain and OpenOCD",
+    manualConfigDescription: "Manually specify toolchain paths in settings",
+    toolchainSetupFailed: "Toolchain setup failed",
+    toolchainSetupSuccess: "Toolchain setup completed successfully"
 };

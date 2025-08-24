@@ -47,6 +47,8 @@ export interface LocalizedStrings {
     openocdPath: string;
     /** OpenOCD路径（可选） */
     openocdPathOptional: string;
+    /** ARM工具链路径（可选） */
+    armToolchainPath: string;
     /** 浏览按钮 */
     browseButton: string;
     /** 搜索接口文件 */
@@ -97,10 +99,14 @@ export interface LocalizedStrings {
     // 消息文本
     /** 未OpenOCD未找到 */
     noOpenocdFound: string;
+    /** ARM工具链未找到 */
+    noArmToolchainFound: string;
     /** 下载OpenOCD链接 */
     downloadOpenocd: string;
     /** OpenOCD检测到 */
     openocdDetected: string;
+    /** ARM工具链检测到 */
+    armToolchainDetected: string;
     /** 配置生成成功 */
     configGenerated: string;
     /** 实时监视状态 */
@@ -131,4 +137,78 @@ export interface LocalizedStrings {
     // 附加消息
     /** 没有变量 */
     noVariables: string;
+    
+    // 工具链检测
+    /** 工具链检测标题 */
+    toolchainDetectionTitle: string;
+    /** 检测工具链中 */
+    detectingToolchains: string;
+    /** 工具链检测完成 */
+    toolchainDetectionComplete: string;
+    /** OpenOCD检测状态 */
+    openocdDetectionStatus: string;
+    /** ARM工具链检测状态 */
+    armToolchainDetectionStatus: string;
+    /** 检测成功 */
+    detectionSuccess: string;
+    /** 检测失败 */
+    detectionFailed: string;
+    /** 未找到 */
+    notFound: string;
+    /** 找到于 */
+    foundAt: string;
+    /** 版本 */
+    version: string;
+    /** 目标 */
+    target: string;
+    /** 下载OpenOCD */
+    downloadOpenOCD: string;
+    /** 下载ARM工具链 */
+    downloadArmToolchain: string;
+    /** 手动配置路径 */
+    configureManually: string;
+    /** 继续 */
+    continue: string;
+    /** 取消 */
+    cancel: string;
+    /** 确认路径 */
+    confirmPath: string;
+    /** 手动输入路径 */
+    enterPathManually: string;
+    /** 选择路径 */
+    selectPath: string;
+    /** 路径无效 */
+    invalidPath: string;
+    /** 配置已保存 */
+    configurationSaved: string;
+    /** 工具链配置 */
+    toolchainConfiguration: string;
+    /** 自动检测结果 */
+    autoDetectionResults: string;
+    /** 推荐下载链接 */
+    recommendedDownloadLinks: string;
+    /** 工具链检测向导 */
+    toolchainDetectionWizard: string;
+    
+    // 新的工具链设置按钮
+    /** 设置工具链 */
+    setupToolchain: string;
+    /** 检测ARM工具链 */
+    detectArmToolchain: string;
+    /** 工具链设置标题 */
+    toolchainSetupTitle: string;
+    /** 自动检测 */
+    automaticDetection: string;
+    /** 手动配置 */
+    manualConfiguration: string;
+    /** 设置工具链描述 */
+    setupToolchainDescription: string;
+    /** 检测工具链描述 */
+    detectToolchainDescription: string;
+    /** 手动配置描述 */
+    manualConfigDescription: string;
+    /** 工具链设置失败 */
+    toolchainSetupFailed: string;
+    /** 工具链设置成功 */
+    toolchainSetupSuccess: string;
 }

@@ -30,7 +30,7 @@ export const zh: LocalizedStrings = {
     autoDetectElf: "自动检测 (需要ST的STM32扩展)",
     manualElf: "手动路径",
     manualElfPath: "手动 .elf 路径",
-    deviceName: "设备名称 (任意，这主要用于自己看的)",
+    deviceName: "设备名称 (和你的设备名称保持一致，比如STM32F407ZG )",
     gdbServer: "GDB 服务器",
     openocdPath: "OpenOCD 路径 (可选)",
     openocdPathOptional: "OpenOCD 路径 (可选)",
@@ -69,6 +69,11 @@ export const zh: LocalizedStrings = {
     variableAdded: "变量 '{0}' 添加成功",
     variableRemoved: "变量 '{0}' 移除成功",
     
+    // ARM Toolchain
+    armToolchainPath: "ARM 工具链路径 (可选)",
+    noArmToolchainFound: "未找到 ARM 工具链。",
+    armToolchainDetected: "ARM 工具链检测到位置:",
+    
     // Placeholders and help text
     devicePlaceholder: "例如: STM32F407ZG",
     svdPlaceholder: "例如: ${workspaceFolder}/STM32F407.svd",
@@ -81,5 +86,44 @@ export const zh: LocalizedStrings = {
     createdBy: "由 左岚 创建",
     
     // Additional messages
-    noVariables: "尚未添加变量"
+    noVariables: "尚未添加变量",
+    
+    // 工具链检测
+    toolchainDetectionTitle: "工具链检测",
+    detectingToolchains: "正在检测工具链...",
+    toolchainDetectionComplete: "工具链检测完成",
+    openocdDetectionStatus: "OpenOCD 检测状态",
+    armToolchainDetectionStatus: "ARM 工具链检测状态",
+    detectionSuccess: "成功",
+    detectionFailed: "失败", 
+    notFound: "未找到",
+    foundAt: "检测到位置",
+    version: "版本",
+    target: "目标",
+    downloadOpenOCD: "下载 OpenOCD",
+    downloadArmToolchain: "下载 ARM 工具链",
+    configureManually: "手动配置",
+    continue: "继续",
+    cancel: "取消",
+    confirmPath: "确认路径",
+    enterPathManually: "手动输入路径",
+    selectPath: "选择路径",
+    invalidPath: "路径无效",
+    configurationSaved: "配置已保存",
+    toolchainConfiguration: "工具链配置",
+    autoDetectionResults: "自动检测和配置工具链",
+    recommendedDownloadLinks: "推荐下载链接",
+    toolchainDetectionWizard: "工具链检测向导",
+    
+    // 新的工具链设置按钮
+    setupToolchain: "设置工具链",
+    detectArmToolchain: "检测 ARM 工具链",
+    toolchainSetupTitle: "工具链设置",
+    automaticDetection: "自动检测",
+    manualConfiguration: "手动配置",
+    setupToolchainDescription: "为 STM32 调试配置 ARM 开发工具链",
+    detectToolchainDescription: "自动检测和配置 ARM 工具链和 OpenOCD",
+    manualConfigDescription: "在设置中手动指定工具链路径",
+    toolchainSetupFailed: "工具链设置失败",
+    toolchainSetupSuccess: "工具链设置成功完成"
 };

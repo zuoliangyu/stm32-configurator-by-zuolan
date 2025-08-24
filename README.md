@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-0.2.1-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.3-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-^1.80.0-007ACC.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -83,10 +83,16 @@ This extension provides a comprehensive, intelligent configuration system that:
 ### 🎯 Core Capabilities
 
 #### **Intelligent Configuration Generation**
-- **Smart Detection**: Automatically discovers OpenOCD installations, toolchains, and project structure
+- **Smart Detection**: Automatically discovers OpenOCD installations, ARM toolchains, and project structure
 - **One-Click Setup**: Generate complete debug configurations with a single button
 - **Multi-Target Support**: Manage configurations for multiple STM32 targets in one project
 - **Configuration Validation**: Real-time validation prevents invalid configurations
+
+#### **ARM Toolchain Integration** ⭐ *NEW in v0.2.3*
+- **Automatic Detection**: Intelligent discovery of ARM GNU toolchain installations
+- **Path Standardization**: Cross-platform path handling with forward slash normalization
+- **User Guidance**: Step-by-step setup with direct links to ARM developer downloads
+- **Seamless Integration**: Works alongside existing OpenOCD configuration workflow
 
 #### **Visual Configuration Interface**
 - **Modern UI Design**: Clean, intuitive interface that follows VS Code design language
@@ -285,8 +291,9 @@ Example paths:
    - Or press `Ctrl+Shift+P` → "STM32: Generate Debug Configuration"
 
 3. **Configure & Generate**
-   - The extension auto-detects most settings
-   - Review and adjust if needed
+   - The extension auto-detects OpenOCD and ARM toolchain paths
+   - For ARM toolchain: Click "Browse" or use direct download link to [ARM Developer](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
+   - Review and adjust settings if needed
    - Click "Generate Configuration"
 
 4. **Start Debugging**
@@ -873,7 +880,27 @@ npm run test:watch
 
 ## 📝 Release Notes
 
-### Version 0.2.1 (Current) - January 2025
+### Version 0.2.3 (Current) - January 2025
+
+#### ✨ New Features
+- **ARM Toolchain Integration**: Complete ARM GNU toolchain detection and configuration
+- **Intelligent Path Detection**: Multi-strategy toolchain discovery across platforms
+- **User-Friendly Setup**: Direct download links and guided configuration process
+- **Auto-Configuration Service**: One-click complete environment setup
+- **Path Standardization**: Cross-platform path handling with forward slash normalization
+
+#### 🔧 Improvements
+- **Enhanced UI**: ARM toolchain section integrated seamlessly with existing OpenOCD workflow
+- **Better Error Handling**: Comprehensive validation and user feedback
+- **Performance Optimization**: Improved detection algorithms and caching strategies
+- **Documentation**: Complete ARM toolchain setup and usage guides
+
+#### 🐛 Bug Fixes
+- **Path Issues**: Fixed Windows path handling for OpenOCD and ARM toolchain paths
+- **Configuration Generation**: Improved cortex-debug settings consistency
+- **Authentication Removed**: Simplified user experience by removing unnecessary authentication modules
+
+### Version 0.2.1 - January 2025
 
 #### ✨ New Features
 - **Enhanced Search**: Real-time filtering with highlighting

@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![版本](https://img.shields.io/badge/version-0.2.1-blue.svg)
+![版本](https://img.shields.io/badge/version-0.2.3-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-^1.80.0-007ACC.svg)
 ![许可证](https://img.shields.io/badge/license-MIT-green.svg)
 ![作者](https://img.shields.io/badge/author-左岚-orange.svg)
