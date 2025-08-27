@@ -26,7 +26,8 @@
       "Bash(del verify_structure.js)",
       "Bash(del:*)",
       "Bash(npm run test:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx vsce publish:*)"
     ],
     "deny": [],
     "ask": []
