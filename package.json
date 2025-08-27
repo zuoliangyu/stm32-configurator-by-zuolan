@@ -233,7 +233,7 @@
     "compile": "tsc -p ./ && copyfiles -u 1 \"src/webview/**/*\" out/",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint src",
     "test": "node ./out/test/runTest.js",
     "test:unit": "npm run compile && mocha ./out/test/openocd-browser.test.js",
     "test:integration": "npm run compile && mocha ./out/test/webview-integration.test.js",
