@@ -553,6 +553,32 @@ export function deactivate() {
  */
 async function generateConfiguration(data: any) {
     if (!vscode.workspace.workspaceFolders) { vscode.window.showErrorMessage('Please open a project folder first!'); return; }
+    
+    // 检查 OpenOCD 使用时的必需路径配置
+    if (data.servertype === 'openocd') {
+        const missingPaths = [];
+        
+        // 检查 OpenOCD 路径
+        if (!data.openocdPath || data.openocdPath.trim() === '') {
+            missingPaths.push(localizationManager.getString('openocdPathRequired'));
+        }
+        
+        // 检查 ARM 工具链路径
+        if (!data.armToolchainPath || data.armToolchainPath.trim() === '') {
+            if (!detectedArmToolchainPath) {
+                missingPaths.push(localizationManager.getString('armToolchainPathRequired'));
+            }
+        }
+        
+        // 如果有缺失的路径，显示错误并阻止配置创建
+        if (missingPaths.length > 0) {
+            const errorTitle = localizationManager.getString('missingToolchainPaths');
+            const errorMessage = `${errorTitle}\n\n${missingPaths.join('\n')}\n\n${localizationManager.getString('configurationBlocked')}`;
+            
+            vscode.window.showErrorMessage(errorMessage, { modal: true });
+            return;
+        }
+    }
     if (data.servertype === 'openocd' && data.openocdPath && data.openocdPath.trim() !== '') {
         try {
             const cortexDebugConfig = vscode.workspace.getConfiguration('cortex-debug');

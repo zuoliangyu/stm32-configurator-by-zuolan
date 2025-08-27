@@ -21,9 +21,9 @@ exports.en = {
     manualElfPath: "Manual .elf Path",
     deviceName: "Device Name (e.g., STM32F407ZG)",
     gdbServer: "GDB Server",
-    openocdPath: "OpenOCD Path (Optional)",
-    openocdPathOptional: "OpenOCD Path (Optional)",
-    armToolchainPath: "ARM Toolchain Path (Optional)",
+    openocdPath: "OpenOCD Path (Required when using OpenOCD)",
+    openocdPathOptional: "OpenOCD Path (Required when using OpenOCD)",
+    armToolchainPath: "ARM Toolchain Path (Required when using OpenOCD)",
     browseButton: "Browse",
     searchInterface: "Search interface files...",
     searchTarget: "Search target files...",
@@ -104,6 +104,11 @@ exports.en = {
     detectToolchainDescription: "Automatically detect and configure ARM toolchain and OpenOCD",
     manualConfigDescription: "Manually specify toolchain paths in settings",
     toolchainSetupFailed: "Toolchain setup failed",
-    toolchainSetupSuccess: "Toolchain setup completed successfully"
+    toolchainSetupSuccess: "Toolchain setup completed successfully",
+    // Path validation error messages
+    openocdPathRequired: "OpenOCD path is required when using OpenOCD!",
+    armToolchainPathRequired: "ARM toolchain path is required when using OpenOCD!",
+    configurationBlocked: "Configuration creation blocked. Please configure the required toolchain paths first.",
+    missingToolchainPaths: "Missing required toolchain paths"
 };
 //# sourceMappingURL=en.js.map

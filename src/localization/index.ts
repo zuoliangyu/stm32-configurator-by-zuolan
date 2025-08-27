@@ -211,4 +211,14 @@ export interface LocalizedStrings {
     toolchainSetupFailed: string;
     /** 工具链设置成功 */
     toolchainSetupSuccess: string;
+    
+    // 路径验证错误消息
+    /** OpenOCD路径必需错误 */
+    openocdPathRequired: string;
+    /** ARM工具链路径必需错误 */
+    armToolchainPathRequired: string;
+    /** 配置被阻止错误 */
+    configurationBlocked: string;
+    /** 缺少工具链路径错误 */
+    missingToolchainPaths: string;
 }

@@ -32,8 +32,8 @@ export const zh: LocalizedStrings = {
     manualElfPath: "手动 .elf 路径",
     deviceName: "设备名称 (和你的设备名称保持一致，比如STM32F407ZG )",
     gdbServer: "GDB 服务器",
-    openocdPath: "OpenOCD 路径 (可选)",
-    openocdPathOptional: "OpenOCD 路径 (可选)",
+    openocdPath: "OpenOCD 路径 (使用OpenOCD时必须)",
+    openocdPathOptional: "OpenOCD 路径 (使用OpenOCD时必须)",
     browseButton: "浏览",
     searchInterface: "搜索接口文件...",
     searchTarget: "搜索目标文件...",
@@ -70,7 +70,7 @@ export const zh: LocalizedStrings = {
     variableRemoved: "变量 '{0}' 移除成功",
     
     // ARM Toolchain
-    armToolchainPath: "ARM 工具链路径 (可选)",
+    armToolchainPath: "ARM 工具链路径 (使用OpenOCD时必须)",
     noArmToolchainFound: "未找到 ARM 工具链。",
     armToolchainDetected: "ARM 工具链检测到位置:",
     
@@ -125,5 +125,11 @@ export const zh: LocalizedStrings = {
     detectToolchainDescription: "自动检测和配置 ARM 工具链和 OpenOCD",
     manualConfigDescription: "在设置中手动指定工具链路径",
     toolchainSetupFailed: "工具链设置失败",
-    toolchainSetupSuccess: "工具链设置成功完成"
+    toolchainSetupSuccess: "工具链设置成功完成",
+    
+    // 路径验证错误消息
+    openocdPathRequired: "使用 OpenOCD 时必须配置 OpenOCD 路径！",
+    armToolchainPathRequired: "使用 OpenOCD 时必须配置 ARM 工具链路径！",
+    configurationBlocked: "配置创建已阻止，请先配置必需的工具链路径。",
+    missingToolchainPaths: "缺少必需的工具链路径"
 };
