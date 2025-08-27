@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![版本](https://img.shields.io/badge/version-0.2.3-blue.svg)
+![版本](https://img.shields.io/badge/version-0.2.5-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-^1.80.0-007ACC.svg)
 ![许可证](https://img.shields.io/badge/license-MIT-green.svg)
 ![作者](https://img.shields.io/badge/author-左岚-orange.svg)
@@ -359,7 +359,30 @@ monitor reset run      # 复位并运行
 
 ## 📝 更新日志
 
-### 版本 0.2.1（最新）
+### 版本 0.2.5（最新）
+- 📚 **文档和打包更新**：同步所有版本的README版本信息和更新日志
+- 📦 **包优化**：清理VSIX包，排除开发文件和文档
+- ✅ **版本一致性**：确保package.json、README和GitHub发布版本对齐
+- 🔄 **改进发布流程**：完善打包和发布工作流程
+
+### 版本 0.2.4
+- 🔧 **强化 OpenOCD 配置验证**：增强配置验证机制，防止配置错误
+- ⚡ **改进错误处理**：更好的错误检测和用户反馈
+- 🛡️ **增强调试可靠性**：提高调试配置生成过程的稳定性  
+- ✅ **完善验证逻辑**：更全面的OpenOCD路径和配置检查
+
+### 版本 0.2.3
+- 🔧 **ARM工具链完整集成**：完整的ARM GNU工具链检测和配置
+- 🎯 **智能路径检测**：多策略工具链发现，跨平台支持
+- 📚 **用户友好设置**：直接下载链接和引导式配置流程
+- ⚙️ **自动配置服务**：一键完整环境设置
+- 🌐 **路径标准化**：跨平台路径处理和正斜杠标准化
+
+### 版本 0.2.2
+- 🔧 版本升级和功能优化
+- ➕ 添加部分操作和功能完善
+
+### 版本 0.2.1
 - 🔍 增强了接口和目标文件的搜索功能
 - 📁 添加了 OpenOCD 可执行文件选择的文件浏览器
 - 🌍 改进了本地化支持

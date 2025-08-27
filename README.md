@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-0.2.3-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.5-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-^1.80.0-007ACC.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -880,7 +880,23 @@ npm run test:watch
 
 ## 📝 Release Notes
 
-### Version 0.2.3 (Current) - January 2025
+### Version 0.2.5 (Current) - January 2025
+
+#### 🔧 Documentation and Packaging Updates
+- **Updated Documentation**: Synchronized README version information and changelog across all versions
+- **Package Optimization**: Cleaned up VSIX package by excluding development files and documentation
+- **Version Consistency**: Ensured version alignment between package.json, README, and GitHub releases
+- **Improved Release Process**: Refined packaging and publishing workflow
+
+### Version 0.2.4 - January 2025
+
+#### 🔧 Enhanced Reliability
+- **Strengthened OpenOCD Configuration Validation**: More robust validation mechanisms to prevent configuration errors
+- **Improved Error Handling**: Better error detection and user feedback for configuration issues  
+- **Enhanced Debugging Reliability**: Increased stability of debug configuration generation process
+- **Refined Validation Logic**: More comprehensive checking of OpenOCD paths and configurations
+
+### Version 0.2.3 - January 2025
 
 #### ✨ New Features
 - **ARM Toolchain Integration**: Complete ARM GNU toolchain detection and configuration

@@ -9,3 +9,22 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+
+# 开发文件和目录
+.claude/**
+docs/**
+*.vsix
+node_modules/**
+coverage/**
+.nyc_output/**
+out/test/**
+*.log
+.env
+.env.*
+*.test.js
+run-arm-toolchain-tests.js
+nyc.config.js
+
+# GitHub Actions 和 Git 文件
+.github/**
+.git/**
