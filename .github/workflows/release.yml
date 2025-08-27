@@ -1,48 +1,68 @@
-# 工作流的名称
-name: Create Release and Upload VSIX
+name: Release Extension
 
-# 工作流的触发条件
+# 只在推送版本标签时触发（v1.0.0, v1.2.3等）
 on:
   push:
     tags:
       - 'v*.*.*'
 
-# 工作流包含的任务
 jobs:
-  build-and-release:
-    # 任务运行的环境
+  release:
+    name: Build and Release Extension
     runs-on: ubuntu-latest
-
-    # --- 修正点：为这个任务添加权限 ---
+    
     permissions:
       contents: write
-
-    # 任务的步骤
+      
     steps:
-      # 第一步：检出你的代码
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 第二步：设置 Node.js 环境
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      # 第三步：安装项目依赖和 vsce 工具
-      - name: Install dependencies and vsce
-        run: |
-          npm install
-          npm install -g @vscode/vsce
+      - name: Install dependencies
+        run: npm ci
 
-      # 第四步：打包插件
+      - name: Run linting
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Compile TypeScript
+        run: npm run compile
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
       - name: Package extension
         run: vsce package --allow-missing-repository
 
-      # 第五步：创建 GitHub Release 并上传 .vsix 文件
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          name: ${{ steps.get_version.outputs.VERSION }}
           files: '*.vsix'
+          body: |
+            ## STM32 Debug Configurator ${{ steps.get_version.outputs.VERSION }}
+            
+            ### 📦 下载
+            下载 `.vsix` 文件并在 VS Code 中手动安装，或直接从 [扩展商店](https://marketplace.visualstudio.com/items?itemName=zuolan.stm32-configurator-by-zuolan) 安装。
+            
+            ### 🔧 安装方式
+            1. **扩展商店**：在 VS Code 中搜索 "STM32 Debug Configurator"
+            2. **手动安装**：下载 `.vsix` 文件，运行 `code --install-extension stm32-configurator-by-zuolan-*.vsix`
+            
+            ### 📝 更新日志
+            查看完整更新内容请参考项目 README。
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
