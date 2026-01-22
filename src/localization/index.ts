@@ -51,12 +51,16 @@ export interface LocalizedStrings {
     armToolchainPath: string;
     /** 浏览按钮 */
     browseButton: string;
+    /** 环境配置按钮 */
+    envSetupButton: string;
     /** 搜索接口文件 */
     searchInterface: string;
     /** 搜索目标文件 */
     searchTarget: string;
     /** 扫描按钮 */
     scanButton: string;
+    /** 查看环境配置指南 */
+    viewEnvGuide: string;
     /** 接口文件 */
     interfaceFile: string;
     /** 目标文件/ID */

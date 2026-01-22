@@ -17,11 +17,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { STM32TreeDataProvider, DebugConfiguration } from './providers';
 import { findOpenOCDPath, getOpenOCDConfigFiles } from './utils/openocd';
+import { checkOpenOCDEnvironment, showOpenOCDConfigurationWizard, showEnvironmentSetupHelp, validateOpenOCDConfiguration } from './utils/openocdEnvHelper';
 import { ensureCortexDebugInstalled, isCortexDebugInstalled } from './utils/cortex-debug';
 import { findArmToolchainPath, getArmToolchainInfo, validateArmToolchainPath, ToolchainInfo } from './utils/armToolchain';
 import { LocalizationManager, SupportedLanguage } from './localization/localizationManager';
 import { normalizePath } from './utils/pathUtils';
-import { ToolchainDetectionService } from './services';
+import { ToolchainDetectionService, StateManager, ExtensionConfigurationState } from './services';
 import { ToolchainGuideDialog } from './ui';
 import { AutoConfigurationDialog } from './ui/autoConfigurationDialog';
 
@@ -46,6 +47,12 @@ let localizationManager: LocalizationManager;
 /** 当前实时监视变量列表 */
 let currentLiveWatchVariables: string[] = [];
 
+/** 当前webview状态 */
+let currentWebviewState: any = null;
+
+/** 状态管理器实例 */
+let stateManager: StateManager;
+
 /**
  * 激活扩展
  * 初始化扩展的所有功能，包括本地化、树形视图、命令注册等
@@ -59,6 +66,9 @@ let currentLiveWatchVariables: string[] = [];
  * @since 0.1.0
  */
 export function activate(context: vscode.ExtensionContext) {
+    // Initialize state manager
+    stateManager = new StateManager(context);
+    
     // Initialize localization
     localizationManager = LocalizationManager.getInstance(context);
     
@@ -283,14 +293,59 @@ export function activate(context: vscode.ExtensionContext) {
                 'stm32Configurator', 'STM32 Debug Configurator', vscode.ViewColumn.One,
                 {
                     enableScripts: true,
+                    retainContextWhenHidden: true, // Keep webview state when hidden
                     localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'out', 'webview')]
                 }
             );
 
             currentPanel.webview.html = getWebviewContent(context.extensionUri, currentPanel.webview);
-            currentPanel.onDidDispose(() => { currentPanel = undefined; }, null, context.subscriptions);
 
-            currentPanel.webview.postMessage({ command: 'updatePath', path: detectedOpenOCDPath });
+            // Handle webview disposal
+            currentPanel.onDidDispose(async () => {
+                // Save current state before disposing
+                if (currentWebviewState) {
+                    try {
+                        await stateManager.saveState(currentWebviewState);
+                        console.log('State saved on webview dispose');
+                    } catch (error) {
+                        console.error('Failed to save state on webview dispose:', error);
+                    }
+                }
+                currentPanel = undefined;
+            }, null, context.subscriptions);
+
+            // Handle webview visibility changes
+            currentPanel.onDidChangeViewState(async (e) => {
+                if (e.webviewPanel.visible) {
+                    // Webview became visible - restore state
+                    console.log('Webview became visible, restoring state');
+                    await restoreSavedStateToWebview();
+                } else {
+                    // Webview became hidden - save current state
+                    console.log('Webview became hidden, saving state');
+                    if (currentWebviewState) {
+                        try {
+                            await stateManager.saveState(currentWebviewState);
+                        } catch (error) {
+                            console.error('Failed to save state on webview hide:', error);
+                        }
+                    }
+                }
+            }, null, context.subscriptions);
+
+            // Restore saved state after webview is created
+            await restoreSavedStateToWebview();
+
+            // Send OpenOCD status with environment info
+            const envStatus = await checkOpenOCDEnvironment();
+            currentPanel.webview.postMessage({ 
+                command: 'updatePath', 
+                path: detectedOpenOCDPath,
+                foundInPath: envStatus.foundInPath,
+                foundInSettings: envStatus.foundInSettings,
+                version: envStatus.version,
+                suggestions: envStatus.suggestions
+            });
             currentPanel.webview.postMessage({ 
                 command: 'updateArmToolchainPath', 
                 path: detectedArmToolchainPath,
@@ -308,19 +363,43 @@ export function activate(context: vscode.ExtensionContext) {
                             try {
                                 const newPath = await findOpenOCDPath();
                                 detectedOpenOCDPath = newPath;
-                                currentPanel?.webview.postMessage({ command: 'updatePath', path: detectedOpenOCDPath });
+                                const envStatus = await checkOpenOCDEnvironment();
+                                
+                                currentPanel?.webview.postMessage({ 
+                                    command: 'updatePath', 
+                                    path: detectedOpenOCDPath,
+                                    foundInPath: envStatus.foundInPath,
+                                    foundInSettings: envStatus.foundInSettings,
+                                    version: envStatus.version,
+                                    suggestions: envStatus.suggestions
+                                });
                                 
                                 if (!newPath) {
-                                    vscode.window.showWarningMessage(
-                                        localizationManager.getString('noOpenocdFound') + ' Please install OpenOCD or set custom path in extension settings.',
-                                        'Open Settings'
-                                    ).then(selection => {
-                                        if (selection === 'Open Settings') {
-                                            vscode.commands.executeCommand('workbench.action.openSettings', 'stm32-configurator.openocdPath');
-                                        }
-                                    });
+                                    // Show configuration wizard instead of just warning
+                                    const action = await vscode.window.showWarningMessage(
+                                        localizationManager.getString('noOpenocdFound') + ' Would you like to configure it now?',
+                                        'Configure OpenOCD',
+                                        'Open Settings',
+                                        'Cancel'
+                                    );
+                                    
+                                    if (action === 'Configure OpenOCD') {
+                                        await showOpenOCDConfigurationWizard();
+                                    } else if (action === 'Open Settings') {
+                                        vscode.commands.executeCommand('workbench.action.openSettings', 'stm32-configurator.openocdPath');
+                                    }
                                 } else {
-                                    vscode.window.showInformationMessage(`${localizationManager.getString('openocdDetected')} ${newPath}`);
+                                    // Validate the detected OpenOCD
+                                    const validation = await validateOpenOCDConfiguration(newPath);
+                                    if (validation.valid) {
+                                        vscode.window.showInformationMessage(
+                                            `${localizationManager.getString('openocdDetected')} ${newPath} (v${validation.version || 'unknown'})`
+                                        );
+                                    } else {
+                                        vscode.window.showWarningMessage(
+                                            `OpenOCD found but validation failed: ${validation.error}`
+                                        );
+                                    }
                                 }
                             } catch (error) {
                                 vscode.window.showErrorMessage(`Error detecting OpenOCD path: ${error}`);
@@ -360,6 +439,15 @@ export function activate(context: vscode.ExtensionContext) {
                             } catch (error: any) {
                                 vscode.window.showErrorMessage(`Failed to browse for OpenOCD path: ${error.message}`);
                             }
+                            return;
+
+                        case 'showEnvSetupHelp':
+                            await showEnvironmentSetupHelp(detectedOpenOCDPath || undefined);
+                            return;
+
+                        case 'showEnvGuide':
+                            const guideUri = vscode.Uri.joinPath(context.extensionUri, 'docs', 'OPENOCD_ENV_SETUP.md');
+                            await vscode.commands.executeCommand('markdown.showPreview', guideUri);
                             return;
 
                         case 'addLiveWatchVariable':
@@ -422,6 +510,18 @@ export function activate(context: vscode.ExtensionContext) {
                                     command: 'updateArmToolchainPath', 
                                     path: null,
                                     info: null 
+                                });
+                            }
+                            return;
+
+                        case 'saveState':
+                            try {
+                                await handleSaveState(message.state);
+                            } catch (error) {
+                                console.error('Error saving configuration state:', error);
+                                currentPanel?.webview.postMessage({
+                                    command: 'showError',
+                                    error: `Failed to save configuration: ${error instanceof Error ? error.message : String(error)}`
                                 });
                             }
                             return;
@@ -627,11 +727,18 @@ async function generateConfiguration(data: any) {
         
         // Add graphConfig for variable watching
         if (data.liveWatch.variables && data.liveWatch.variables.length > 0) {
-            newConfig.graphConfig = data.liveWatch.variables.map((variable: string, index: number) => ({
-                label: variable,
-                expression: variable,
-                encoding: "unsigned"
-            }));
+            // Validate and sanitize variable names
+            const validVariables = data.liveWatch.variables
+                .filter((variable: string) => variable && typeof variable === 'string' && variable.trim().length > 0)
+                .map((variable: string) => variable.trim());
+            
+            if (validVariables.length > 0) {
+                newConfig.graphConfig = validVariables.map((variable: string, index: number) => ({
+                    label: variable,
+                    expression: variable,
+                    encoding: "unsigned"
+                }));
+            }
         }
     }
     if (data.servertype === 'openocd') {
@@ -647,12 +754,29 @@ async function generateConfiguration(data: any) {
         if (fs.existsSync(launchJsonPath.fsPath)) {
             const content = fs.readFileSync(launchJsonPath.fsPath, 'utf8');
             if (content.trim()) {
-                launchConfig = JSON.parse(content);
-                if (!launchConfig.configurations) { launchConfig.configurations = []; }
+                try {
+                    launchConfig = JSON.parse(content);
+                    if (!launchConfig.configurations) { launchConfig.configurations = []; }
+                } catch (parseError) {
+                    console.warn('Failed to parse existing launch.json, using default configuration:', parseError);
+                    vscode.window.showWarningMessage('Existing launch.json has invalid format. Creating new configuration.');
+                    // Keep default launchConfig with empty configurations
+                }
             }
         }
         launchConfig.configurations.unshift(newConfig);
-        fs.writeFileSync(launchJsonPath.fsPath, JSON.stringify(launchConfig, null, 4));
+        
+        // Safely stringify the configuration with error handling
+        let jsonString: string;
+        try {
+            jsonString = JSON.stringify(launchConfig, null, 4);
+        } catch (stringifyError: any) {
+            console.error('Failed to stringify launch configuration:', stringifyError);
+            console.error('Problematic config object:', newConfig);
+            throw new Error(`Failed to generate JSON configuration: ${stringifyError?.message || String(stringifyError)}`);
+        }
+        
+        fs.writeFileSync(launchJsonPath.fsPath, jsonString);
         
         // Generate success message with livewatch status
         let successMessage = localizationManager.getString('configGenerated');
@@ -919,6 +1043,73 @@ async function browseForArmToolchainPath(): Promise<string | undefined> {
 }
 
 /**
+ * 恢复保存的状态到Webview
+ * 在创建webview后恢复用户之前的配置
+ * 
+ * @returns Promise<void>
+ */
+async function restoreSavedStateToWebview(): Promise<void> {
+    try {
+        const savedState = await stateManager.loadState();
+        
+        if (Object.keys(savedState).length === 0) {
+            console.log('No saved state to restore');
+            return;
+        }
+        
+        // 恢复实时监视变量
+        if (savedState.liveWatch?.variables) {
+            currentLiveWatchVariables = [...savedState.liveWatch.variables];
+        }
+        
+        // 发送恢复状态消息到webview
+        currentPanel?.webview.postMessage({
+            command: 'restoreState',
+            state: savedState
+        });
+        
+        console.log('Configuration state restored to webview:', {
+            keys: Object.keys(savedState),
+            liveWatchVariables: currentLiveWatchVariables.length
+        });
+        
+    } catch (error) {
+        console.error('Failed to restore saved state:', error);
+        // 不阻止webview正常工作，只是记录错误
+    }
+}
+
+/**
+ * 处理状态保存请求
+ * 接收webview发送的状态数据并持久化保存
+ * 
+ * @param state - 要保存的状态数据
+ * @returns Promise<void>
+ */
+async function handleSaveState(state: ExtensionConfigurationState): Promise<void> {
+    try {
+        // 更新当前实时监视变量列表
+        if (state.liveWatch?.variables) {
+            currentLiveWatchVariables = [...state.liveWatch.variables];
+        }
+
+        // 更新当前webview状态
+        currentWebviewState = state;
+
+        // 保存状态到持久化存储
+        await stateManager.saveState(state);
+
+        console.log('Configuration state saved successfully:', {
+            keys: Object.keys(state)
+        });
+
+    } catch (error) {
+        console.error('Failed to save configuration state:', error);
+        throw error;
+    }
+}
+
+/**
  * 获取Webview内容
  * 读取HTML模板文件并替换其中的占位符，生成完整的Webview内容
  * 
@@ -933,6 +1124,7 @@ function getWebviewContent(extensionUri: vscode.Uri, webview: vscode.Webview): s
     let htmlContent = fs.readFileSync(htmlPathOnDisk.fsPath, 'utf8');
     htmlContent = htmlContent.replace(/{{cspSource}}/g, webview.cspSource)
         .replace(/{{cssUri}}/g, webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'webview', 'styles.css')).toString())
+        .replace(/{{stateManagerUri}}/g, webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'webview', 'stateManager.js')).toString())
         .replace(/{{jsUri}}/g, webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'webview', 'main.js')).toString());
     return htmlContent;
 }

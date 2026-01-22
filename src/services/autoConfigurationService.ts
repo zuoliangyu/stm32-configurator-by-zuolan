@@ -632,12 +632,28 @@ export class AutoConfigurationService {
 
         // 读取现有配置
         if (fs.existsSync(launchJsonPath)) {
-            const content = fs.readFileSync(launchJsonPath, 'utf8');
-            if (content.trim()) {
-                launchConfig = JSON.parse(content);
-                if (!launchConfig.configurations) {
-                    launchConfig.configurations = [];
+            try {
+                const content = fs.readFileSync(launchJsonPath, 'utf8');
+                if (content.trim()) {
+                    launchConfig = JSON.parse(content);
+                    if (!launchConfig || typeof launchConfig !== 'object') {
+                        throw new Error('Invalid configuration format');
+                    }
+                    if (!launchConfig.configurations) {
+                        launchConfig.configurations = [];
+                    }
                 }
+            } catch (error) {
+                console.warn('Failed to parse existing launch.json, creating new configuration:', error);
+                // 创建备份
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const backupPath = path.join(dotVscodeFolder, `launch.json.invalid.${timestamp}`);
+                try {
+                    fs.copyFileSync(launchJsonPath, backupPath);
+                } catch (backupError) {
+                    console.warn('Failed to create backup:', backupError);
+                }
+                launchConfig = { version: '0.2.0', configurations: [] };
             }
         }
 
@@ -665,7 +681,12 @@ export class AutoConfigurationService {
         }
 
         // 保存配置
-        fs.writeFileSync(launchJsonPath, JSON.stringify(launchConfig, null, 4));
+        try {
+            const configJson = JSON.stringify(launchConfig, null, 4);
+            fs.writeFileSync(launchJsonPath, configJson);
+        } catch (error) {
+            throw new Error(`Failed to save configuration to launch.json: ${error instanceof Error ? error.message : String(error)}`);
+        }
     }
 
     /**

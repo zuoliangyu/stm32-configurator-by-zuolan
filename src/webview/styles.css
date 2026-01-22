@@ -12,6 +12,52 @@ body {
     margin: 0 auto;
 }
 
+/* Status information styles */
+.status-info {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    display: none;
+}
+
+.status-info.success {
+    background-color: var(--vscode-notificationsInfoIcon-foreground, #28a745);
+    background-color: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    color: var(--vscode-foreground);
+    display: block;
+}
+
+.status-info.warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    color: var(--vscode-foreground);
+    display: block;
+}
+
+.status-info.error {
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: var(--vscode-foreground);
+    display: block;
+}
+
+.status-info .status-icon {
+    margin-right: 6px;
+    font-weight: bold;
+}
+
+.status-info a {
+    color: var(--vscode-textLink-foreground);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.status-info a:hover {
+    text-decoration: underline;
+}
+
 h1 {
     color: var(--vscode-text-link-foreground);
 }
@@ -451,6 +497,116 @@ label input[type="checkbox"] {
     }
 }
 
+/* Notification styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    border-radius: 4px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    max-width: 300px;
+    word-wrap: break-word;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.notification-error {
+    background-color: var(--vscode-errorForeground, #d73a49);
+    border-left: 4px solid var(--vscode-errorBorder, #f85149);
+}
+
+.notification-warning {
+    background-color: var(--vscode-warningForeground, #f66a0a);
+    border-left: 4px solid var(--vscode-warningBorder, #ff8c00);
+}
+
+.notification-success {
+    background-color: var(--vscode-testing-iconPassed, #28a745);
+    border-left: 4px solid var(--vscode-successBackground, #2ea043);
+}
+
+.notification-info {
+    background-color: var(--vscode-infoForeground, #0366d6);
+    border-left: 4px solid var(--vscode-infoBorder, #0969da);
+}
+
+/* Notification animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* State indicator */
+.state-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background-color: var(--vscode-badge-background);
+    color: var(--vscode-badge-foreground);
+    font-size: 0.8em;
+    z-index: 999;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.state-indicator.dirty {
+    background-color: var(--vscode-warningForeground, #f66a0a);
+    color: white;
+}
+
+.state-indicator.saving {
+    background-color: var(--vscode-progressBar-background, #0366d6);
+    color: white;
+}
+
+.state-indicator.saved {
+    background-color: var(--vscode-testing-iconPassed, #28a745);
+    color: white;
+}
+
+/* Form validation styles */
+.form-group.invalid {
+    border-left: 3px solid var(--vscode-errorForeground, #d73a49);
+    padding-left: 8px;
+    margin-left: -11px;
+}
+
+.form-group.invalid input,
+.form-group.invalid select {
+    border-color: var(--vscode-errorForeground, #d73a49);
+    background-color: var(--vscode-inputValidation-errorBackground, rgba(215, 58, 73, 0.1));
+}
+
+.validation-error {
+    color: var(--vscode-errorForeground, #d73a49);
+    font-size: 0.8em;
+    margin-top: 4px;
+    display: block;
+}
+
 /* Responsive design for mobile */
 @media (max-width: 600px) {
     .variable-add-section .input-group {
@@ -463,5 +619,17 @@ label input[type="checkbox"] {
     
     .language-switch {
         text-align: center;
+    }
+    
+    .notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .state-indicator {
+        bottom: 10px;
+        right: 10px;
     }
 }

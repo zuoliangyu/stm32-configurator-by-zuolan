@@ -18,6 +18,9 @@ import * as path from 'path';
 import * as os from 'os';
 import { exec } from 'child_process';
 import * as vscode from 'vscode';
+import { findOpenOCDPathEnhanced } from './openocdEnvHelper';
+
+// OpenOCD环境变量检测已移至 openocdEnvHelper.ts
 
 /**
  * Windows平台上常见的OpenOCD安装路径
@@ -99,18 +102,30 @@ function expandPath(pathStr: string): string[] {
  */
 function checkOpenOCDPath(execPath: string): boolean {
     try {
-        return fs.existsSync(execPath) && fs.statSync(execPath).isFile();
-    } catch {
+        if (!execPath || !execPath.trim()) {
+            return false;
+        }
+        const exists = fs.existsSync(execPath);
+        if (!exists) {
+            return false;
+        }
+        const stats = fs.statSync(execPath);
+        return stats.isFile();
+    } catch (error) {
         return false;
     }
 }
+
+// 环境变量检测功能已移至 openocdEnvHelper.ts
 
 /**
  * 使用多种检测方法查找OpenOCD路径
  * 按以下顺序检测：
  * 1. 用户配置的路径
- * 2. PATH环境变量中的openocd
- * 3. 常见安装路径（仅Windows）
+ * 2. OpenOCD专用环境变量（OPENOCD_PATH, OPENOCD_HOME等）
+ * 3. PATH环境变量直接扫描
+ * 4. where/which命令（备用方案）
+ * 5. 常见安装路径（仅Windows）
  * 
  * @returns OpenOCD可执行文件的完整路径，如果未找到则返回null
  * @example
@@ -125,41 +140,34 @@ function checkOpenOCDPath(execPath: string): boolean {
  * @since 0.1.0
  */
 export function findOpenOCDPath(): Promise<string | null> {
-    return new Promise(async (resolve) => {
-        // Method 1: Check user configuration first
-        const config = vscode.workspace.getConfiguration('stm32-configurator');
-        const userOpenOCDPath = config.get<string>('openocdPath');
-        
-        if (userOpenOCDPath && checkOpenOCDPath(userOpenOCDPath)) {
-            resolve(userOpenOCDPath);
-            return;
+    // 优先使用增强的检测逻辑
+    return findOpenOCDPathEnhanced().then(result => {
+        if (result) {
+            return result;
         }
         
-        // Method 2: Try PATH environment variable
-        const command = process.platform === 'win32' ? 'where openocd.exe' : 'which openocd';
-        exec(command, (error, stdout) => {
-            if (!error) {
-                const firstPath = stdout.split(/\r?\n/)[0].trim();
-                if (firstPath && checkOpenOCDPath(firstPath)) {
-                    resolve(firstPath);
-                    return;
-                }
-            }
+        // 如果增强检测未找到，则使用传统方法作为备用
+        return new Promise((resolve) => {
+            console.log('[OpenOCD检测] 使用传统方法作为备用...');
             
-            // Method 3: Check common installation paths (Windows only)
+            // 检查常见安装路径（仅Windows）
             if (process.platform === 'win32') {
+                console.log('[OpenOCD检测] 检查Windows常见安装路径...');
                 for (const pathTemplate of COMMON_OPENOCD_PATHS) {
                     const expandedPaths = expandPath(pathTemplate);
                     for (const testPath of expandedPaths) {
                         if (checkOpenOCDPath(testPath)) {
+                            console.log(`[OpenOCD检测] ✓ 在常见路径中找到OpenOCD: ${testPath}`);
                             resolve(testPath);
                             return;
                         }
                     }
                 }
+                console.log('[OpenOCD检测] 在常见安装路径中未找到OpenOCD');
             }
             
-            // Method 4: Not found
+            // 最终未找到
+            console.log('[OpenOCD检测] ✗ 所有方法都未能找到OpenOCD');
             resolve(null);
         });
     });

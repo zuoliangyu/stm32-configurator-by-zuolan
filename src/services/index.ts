@@ -38,3 +38,9 @@ export {
     ToolchainDetectionServiceTest,
     runToolchainDetectionTests
 } from './toolchainDetectionService.test';
+
+export {
+    StateManager,
+    ExtensionConfigurationState,
+    LiveWatchState
+} from './stateManager';

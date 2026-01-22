@@ -59,9 +59,15 @@
                     <input type="text" id="openocdPath" data-i18n-placeholder="autoDetecting">
                     <button id="browse-button" data-i18n="browseButton" title="Browse for OpenOCD executable">Browse</button>
                     <button id="refresh-button" data-i18n="scanButton" title="Re-scan for OpenOCD in system PATH">Scan</button>
+                    <button id="env-setup-button" data-i18n="envSetupButton" title="Environment variable setup guide">ENV Setup</button>
+                </div>
+                <div id="openocd-status" class="status-info">
+                    <!-- OpenOCD status will be dynamically updated here -->
                 </div>
                 <div id="download-link-container" class="hidden">
-                    <small><span data-i18n="noOpenocdFound">OpenOCD not found.</span> <a href="https://github.com/openocd-org/openocd/releases" data-i18n="downloadOpenocd">Download it here</a>.</small>
+                    <small><span data-i18n="noOpenocdFound">OpenOCD not found.</span> 
+                    <a href="#" id="env-guide-link" data-i18n="viewEnvGuide">View environment setup guide</a> | 
+                    <a href="https://github.com/xpack-dev-tools/openocd-xpack/releases" data-i18n="downloadOpenocd">Download OpenOCD</a></small>
                 </div>
             </div>
 
@@ -155,6 +161,7 @@
         <p class="footer" data-i18n="createdBy">Created by 左岚</p>
     </div>
 
+    <script src="{{stateManagerUri}}"></script>
     <script src="{{jsUri}}"></script>
 </body>
 
