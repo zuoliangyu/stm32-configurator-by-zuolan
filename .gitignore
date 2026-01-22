@@ -35,6 +35,8 @@ coverage/
 # 开发文档和临时文件
 # ========================================
 docs/
+!docs/changelog/
+!docs/changelog/CHANGELOG.md
 *.tmp
 .tmp/
 tmp/
