@@ -5,6 +5,7 @@ STM32 Debug Configurator 扩展的所有重要变更都将记录在此文件中�
 本文档格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 此项目遵循 [语义化版本控制](https://semver.org/lang/zh-CN/)。
 
+
 ## [0.2.6] - 2026-01-23
 
 ### 修复 (Fixed)
